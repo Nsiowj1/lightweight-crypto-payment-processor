@@ -22,6 +22,7 @@ const webhookRoutes = require('./routes/webhookRoutes');
 // Import services
 const paymentMonitorService = require('./services/paymentMonitorService');
 const keepAliveService = require('./services/keepAliveService');
+const websocketService = require('./services/websocketService');
 
 const app = express();
 
@@ -93,6 +94,15 @@ app.listen(PORT, async () => {
   } catch (error) {
     console.error(`❌ Failed to start keep-alive service:`, error);
   }
+
+  // Start WebSocket service
+  try {
+    websocketService.start(app);
+    console.log(`✅ WebSocket service started`);
+    console.log(`🔗 WebSocket endpoint: ws://localhost:${PORT}`);
+  } catch (error) {
+    console.error(`❌ Failed to start WebSocket service:`, error);
+  }
 });
 
 // Graceful shutdown
@@ -100,6 +110,7 @@ process.on('SIGTERM', async () => {
   console.log('🛑 SIGTERM received, shutting down gracefully...');
   paymentMonitorService.stop();
   keepAliveService.stop();
+  websocketService.stop();
   process.exit(0);
 });
 
@@ -107,6 +118,7 @@ process.on('SIGINT', async () => {
   console.log('🛑 SIGINT received, shutting down gracefully...');
   paymentMonitorService.stop();
   keepAliveService.stop();
+  websocketService.stop();
   process.exit(0);
 });
 

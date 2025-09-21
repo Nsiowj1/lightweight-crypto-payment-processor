@@ -4,6 +4,7 @@ const { Redis } = require('@upstash/redis');
 const { SUPABASE_URL, SUPABASE_ANON_KEY, UPSTASH_REDIS_REST_URL, UPSTASH_REDIS_REST_TOKEN } = require('../config/environment');
 const paymentMonitorService = require('../services/paymentMonitorService');
 const keepAliveService = require('../services/keepAliveService');
+const websocketService = require('../services/websocketService');
 
 const router = express.Router();
 
@@ -495,6 +496,239 @@ router.get('/services', async (req, res) => {
       error: 'Failed to get service status'
     });
   }
+});
+
+// WebSocket service status
+router.get('/websocket', (req, res) => {
+  try {
+    const status = websocketService.getStatus();
+
+    res.json({
+      success: true,
+      data: status,
+      timestamp: new Date().toISOString()
+    });
+  } catch (error) {
+    console.error('Error getting WebSocket status:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to get WebSocket status'
+    });
+  }
+});
+
+// Broadcast message to all WebSocket clients
+router.post('/websocket/broadcast', (req, res) => {
+  try {
+    const { message } = req.body;
+
+    if (!message) {
+      return res.status(400).json({
+        success: false,
+        error: 'Message is required'
+      });
+    }
+
+    websocketService.broadcast({
+      type: 'broadcast',
+      message,
+      timestamp: new Date().toISOString()
+    });
+
+    res.json({
+      success: true,
+      message: 'Broadcast sent to all WebSocket clients',
+      timestamp: new Date().toISOString()
+    });
+  } catch (error) {
+    console.error('Error broadcasting message:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to broadcast message'
+    });
+  }
+});
+
+// Get WebSocket client information
+router.get('/websocket/clients', (req, res) => {
+  try {
+    const clients = Array.from(websocketService.clients.values()).map(client => ({
+      id: client.id,
+      connectedAt: client.connectedAt,
+      subscriptions: Array.from(client.subscriptions),
+      isAlive: client.isAlive
+    }));
+
+    res.json({
+      success: true,
+      data: {
+        count: clients.length,
+        clients,
+        timestamp: new Date().toISOString()
+      }
+    });
+  } catch (error) {
+    console.error('Error getting WebSocket clients:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to get WebSocket clients'
+    });
+  }
+});
+
+// WebSocket connection test page
+router.get('/websocket/test', (req, res) => {
+  res.send(`
+    <!DOCTYPE html>
+    <html lang="en">
+    <head>
+      <meta charset="UTF-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <title>WebSocket Test</title>
+      <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .container { max-width: 800px; margin: 0 auto; }
+        #messages { border: 1px solid #ccc; height: 400px; overflow-y: scroll; padding: 10px; margin: 10px 0; }
+        input, button { padding: 10px; margin: 5px; }
+        button { background: #4f46e5; color: white; border: none; cursor: pointer; }
+        button:hover { background: #3730a3; }
+        .status { padding: 10px; margin: 10px 0; border-radius: 4px; }
+        .connected { background: #d1fae5; color: #065f46; }
+        .disconnected { background: #fee2e2; color: #991b1b; }
+      </style>
+    </head>
+    <body>
+      <div class="container">
+        <h1>🔗 WebSocket Test Page</h1>
+        <div id="status" class="status disconnected">Disconnected</div>
+
+        <div>
+          <button onclick="connect()">Connect</button>
+          <button onclick="disconnect()">Disconnect</button>
+          <button onclick="subscribe()">Subscribe to Payments</button>
+          <button onclick="unsubscribe()">Unsubscribe</button>
+        </div>
+
+        <div>
+          <input type="text" id="messageInput" placeholder="Enter message to send" style="width: 300px;">
+          <button onclick="sendMessage()">Send Message</button>
+        </div>
+
+        <div id="messages"></div>
+      </div>
+
+      <script>
+        let ws = null;
+        const messages = document.getElementById('messages');
+        const status = document.getElementById('status');
+
+        function connect() {
+          if (ws && ws.readyState === WebSocket.OPEN) {
+            alert('Already connected!');
+            return;
+          }
+
+          const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+          const wsUrl = protocol + '//' + window.location.host;
+
+          ws = new WebSocket(wsUrl);
+
+          ws.onopen = function(event) {
+            status.textContent = 'Connected';
+            status.className = 'status connected';
+            addMessage('Connected to WebSocket server', 'system');
+          };
+
+          ws.onmessage = function(event) {
+            const data = JSON.parse(event.data);
+            addMessage(JSON.stringify(data, null, 2), 'received');
+          };
+
+          ws.onclose = function(event) {
+            status.textContent = 'Disconnected';
+            status.className = 'status disconnected';
+            addMessage('Disconnected from WebSocket server', 'system');
+          };
+
+          ws.onerror = function(error) {
+            addMessage('WebSocket error: ' + error, 'error');
+          };
+        }
+
+        function disconnect() {
+          if (ws) {
+            ws.close();
+          }
+        }
+
+        function subscribe() {
+          if (ws && ws.readyState === WebSocket.OPEN) {
+            ws.send(JSON.stringify({
+              type: 'subscribe',
+              channel: 'payment:test',
+              paymentId: 'test-payment-id'
+            }));
+          }
+        }
+
+        function unsubscribe() {
+          if (ws && ws.readyState === WebSocket.OPEN) {
+            ws.send(JSON.stringify({
+              type: 'unsubscribe',
+              channel: 'payment:test'
+            }));
+          }
+        }
+
+        function sendMessage() {
+          const input = document.getElementById('messageInput');
+          if (ws && ws.readyState === WebSocket.OPEN && input.value) {
+            ws.send(JSON.stringify({
+              type: 'ping',
+              message: input.value
+            }));
+            addMessage('Sent: ' + input.value, 'sent');
+            input.value = '';
+          }
+        }
+
+        function addMessage(message, type) {
+          const div = document.createElement('div');
+          div.style.margin = '5px 0';
+          div.style.padding = '5px';
+          div.style.borderRadius = '3px';
+
+          switch (type) {
+            case 'sent':
+              div.style.background = '#e0e7ff';
+              div.style.textAlign = 'right';
+              break;
+            case 'received':
+              div.style.background = '#f3f4f6';
+              break;
+            case 'system':
+              div.style.background = '#fef3c7';
+              div.style.fontStyle = 'italic';
+              break;
+            case 'error':
+              div.style.background = '#fee2e2';
+              div.style.color = '#dc2626';
+              break;
+          }
+
+          div.innerHTML = '<small>[' + new Date().toLocaleTimeString() + ']</small> ' + message;
+          messages.appendChild(div);
+          messages.scrollTop = messages.scrollHeight;
+        }
+
+        // Auto-connect on page load
+        window.onload = function() {
+          connect();
+        };
+      </script>
+    </body>
+    </html>
+  `);
 });
 
 module.exports = router;

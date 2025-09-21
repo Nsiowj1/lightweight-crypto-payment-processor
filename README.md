@@ -191,6 +191,41 @@ This will guide you through:
 - `GET /api/health/services` - All services overview
 - `GET /api/health/stats` - Payment statistics
 - `GET /api/health/logs` - Recent webhook logs
+- `GET /api/health/websocket` - WebSocket service status
+- `GET /api/health/websocket/clients` - Connected WebSocket clients
+- `GET /api/health/websocket/test` - WebSocket test interface
+
+### WebSocket Real-time Updates
+
+The system supports real-time WebSocket connections for live payment updates:
+
+**Connection:**
+```javascript
+const ws = new WebSocket('ws://localhost:3000');
+```
+
+**Subscribe to Payment Updates:**
+```javascript
+ws.send(JSON.stringify({
+  type: 'subscribe',
+  channel: 'payment:payment-id',
+  paymentId: 'your-payment-id'
+}));
+```
+
+**Subscribe to Merchant Updates:**
+```javascript
+ws.send(JSON.stringify({
+  type: 'subscribe',
+  channel: 'merchant:merchant-id',
+  merchantId: 'your-merchant-id'
+}));
+```
+
+**Available Channels:**
+- `payment:{paymentId}` - Specific payment updates
+- `merchant:{merchantId}` - All merchant payment updates
+- `broadcast` - Global announcements
 
 ## Security Features
 
@@ -287,9 +322,10 @@ MIT License - see LICENSE file for details.
 
 ## Roadmap
 
-- [ ] Phase 2: HD wallet address generation
-- [ ] Phase 3: Keep-alive and monitoring
-- [ ] Phase 4: Advanced features (USDT/USDC, WebSocket)
+- [x] Phase 1: Foundation (Express.js API, Supabase, Redis, Render deployment)
+- [x] Phase 2: Core Payments (HD wallets, blockchain APIs, payment monitoring)
+- [x] Phase 3: Keep-Alive & Monitoring (multi-layer monitoring, resource tracking)
+- [x] Phase 4: Advanced Features (WebSocket real-time updates, enhanced monitoring)
 - [ ] Phase 5: Security hardening
 - [ ] Phase 6: Testing and launch
 
