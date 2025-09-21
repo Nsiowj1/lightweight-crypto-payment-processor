@@ -19,6 +19,9 @@ const healthRoutes = require('./routes/healthRoutes');
 const paymentRoutes = require('./routes/paymentRoutes');
 const webhookRoutes = require('./routes/webhookRoutes');
 
+// Ensure webhookRoutes is a function
+const webhookRouter = typeof webhookRoutes === 'function' ? webhookRoutes : webhookRoutes.router;
+
 // Import services
 const paymentMonitorService = require('./services/paymentMonitorService');
 const keepAliveService = require('./services/keepAliveService');
@@ -57,7 +60,7 @@ app.use('/api/health', healthRoutes);
 
 // API routes with authentication
 app.use('/api/payments', authMiddleware, paymentRoutes);
-app.use('/api/webhooks', webhookRoutes);
+app.use('/api/webhooks', webhookRouter);
 
 // Root endpoint
 app.get('/', (req, res) => {
