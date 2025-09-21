@@ -28,6 +28,7 @@
     "@upstash/redis": "^1.28.0",
     "express-rate-limit": "^7.1.5",
     "joi": "^17.11.0",
+    "jsonwebtoken": "^9.0.2",
     "crypto": "^1.0.1",
     "uuid": "^9.0.1",
     "axios": "^1.6.2",
