@@ -1,0 +1,483 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lightweight Crypto Payment Processor</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            font-weight: 700;
+        }
+
+        .header p {
+            font-size: 1.1rem;
+            opacity: 0.9;
+        }
+
+        .form-container {
+            padding: 40px;
+        }
+
+        .form-group {
+            margin-bottom: 25px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #4f46e5;
+            font-size: 0.95rem;
+        }
+
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            width: 100%;
+            padding: 12px 16px;
+            border: 2px solid #e5e7eb;
+            border-radius: 8px;
+            font-size: 1rem;
+            transition: border-color 0.3s ease;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: #4f46e5;
+            box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+
+        .crypto-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            gap: 15px;
+            margin-bottom: 25px;
+        }
+
+        .crypto-option {
+            position: relative;
+            cursor: pointer;
+        }
+
+        .crypto-option input[type="radio"] {
+            position: absolute;
+            opacity: 0;
+            width: 100%;
+            height: 100%;
+            cursor: pointer;
+        }
+
+        .crypto-option label {
+            display: block;
+            padding: 15px;
+            border: 2px solid #e5e7eb;
+            border-radius: 8px;
+            text-align: center;
+            font-weight: 600;
+            color: #6b7280;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .crypto-option input[type="radio"]:checked + label {
+            border-color: #4f46e5;
+            background: #4f46e5;
+            color: white;
+        }
+
+        .crypto-option label:hover {
+            border-color: #4f46e5;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .btn {
+            background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 8px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.3s ease;
+            width: 100%;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .result {
+            margin-top: 30px;
+            padding: 20px;
+            border-radius: 8px;
+            display: none;
+        }
+
+        .result.success {
+            background: #d1fae5;
+            border: 1px solid #10b981;
+            color: #065f46;
+        }
+
+        .result.error {
+            background: #fee2e2;
+            border: 1px solid #ef4444;
+            color: #991b1b;
+        }
+
+        .payment-details {
+            background: #f8fafc;
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            padding: 20px;
+            margin-top: 20px;
+        }
+
+        .payment-details h3 {
+            margin-bottom: 15px;
+            color: #4f46e5;
+        }
+
+        .qr-code {
+            text-align: center;
+            margin: 20px 0;
+        }
+
+        .qr-code img {
+            max-width: 200px;
+            border: 2px solid #e5e7eb;
+            border-radius: 8px;
+        }
+
+        .copy-btn {
+            background: #6b7280;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            margin-left: 10px;
+        }
+
+        .copy-btn:hover {
+            background: #4b5563;
+        }
+
+        .status-indicator {
+            display: inline-block;
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            margin-right: 8px;
+        }
+
+        .status-pending {
+            background: #f59e0b;
+        }
+
+        .status-paid {
+            background: #10b981;
+        }
+
+        .status-expired {
+            background: #ef4444;
+        }
+
+        @media (max-width: 768px) {
+            .form-row {
+                grid-template-columns: 1fr;
+            }
+
+            .crypto-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .header h1 {
+                font-size: 2rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>💰 Crypto Payment Processor</h1>
+            <p>Create secure cryptocurrency payment requests</p>
+        </div>
+
+        <div class="form-container">
+            <form id="paymentForm">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="amount">Amount *</label>
+                        <input type="number" id="amount" name="amount" step="0.00000001" min="0.00000001" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="currency">Currency *</label>
+                        <select id="currency" name="currency" required>
+                            <option value="">Select Currency</option>
+                            <option value="BTC">Bitcoin (BTC)</option>
+                            <option value="LTC">Litecoin (LTC)</option>
+                            <option value="ETH">Ethereum (ETH)</option>
+                            <option value="BNB">BNB Smart Chain (BNB)</option>
+                            <option value="SOL">Solana (SOL)</option>
+                            <option value="USDT">Tether (USDT)</option>
+                            <option value="USDC">USD Coin (USDC)</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="orderId">Order ID *</label>
+                    <input type="text" id="orderId" name="order_id" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="description">Description</label>
+                    <textarea id="description" name="description" rows="3" placeholder="Payment description (optional)"></textarea>
+                </div>
+
+                <div class="form-group">
+                    <label for="expiresIn">Expires In (seconds)</label>
+                    <input type="number" id="expiresIn" name="expires_in" value="3600" min="60" max="86400">
+                    <small style="color: #6b7280;">Default: 1 hour (3600 seconds), Max: 24 hours</small>
+                </div>
+
+                <div class="form-group">
+                    <label for="callbackUrl">Callback URL</label>
+                    <input type="url" id="callbackUrl" name="callback_url" placeholder="https://your-site.com/payment/callback">
+                    <small style="color: #6b7280;">We'll notify this URL when payment is received</small>
+                </div>
+
+                <button type="submit" class="btn" id="submitBtn">
+                    🚀 Create Payment Request
+                </button>
+            </form>
+
+            <div id="result" class="result"></div>
+
+            <div id="paymentDetails" class="payment-details" style="display: none;">
+                <h3>Payment Details</h3>
+                <div id="paymentInfo"></div>
+                <div class="qr-code" id="qrCodeContainer"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = window.location.origin + '/api';
+        const API_KEY = 'your-api-key-here'; // Replace with actual API key
+
+        document.getElementById('paymentForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            const submitBtn = document.getElementById('submitBtn');
+            const resultDiv = document.getElementById('result');
+            const paymentDetails = document.getElementById('paymentDetails');
+
+            // Disable form
+            submitBtn.disabled = true;
+            submitBtn.textContent = '⏳ Creating Payment...';
+
+            // Clear previous results
+            resultDiv.style.display = 'none';
+            paymentDetails.style.display = 'none';
+
+            try {
+                const formData = new FormData(e.target);
+                const paymentData = {
+                    amount: parseFloat(formData.get('amount')),
+                    currency: formData.get('currency'),
+                    order_id: formData.get('order_id'),
+                    description: formData.get('description'),
+                    expires_in: parseInt(formData.get('expires_in')),
+                    callback_url: formData.get('callback_url'),
+                    metadata: {}
+                };
+
+                const response = await fetch(`${API_BASE}/payments`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'x-api-key': API_KEY
+                    },
+                    body: JSON.stringify(paymentData)
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    showSuccess(result.data);
+                } else {
+                    showError(result.error);
+                }
+
+            } catch (error) {
+                showError('Network error: ' + error.message);
+            } finally {
+                // Re-enable form
+                submitBtn.disabled = false;
+                submitBtn.textContent = '🚀 Create Payment Request';
+            }
+        });
+
+        function showSuccess(data) {
+            const resultDiv = document.getElementById('result');
+            const paymentDetails = document.getElementById('paymentDetails');
+            const paymentInfo = document.getElementById('paymentInfo');
+
+            resultDiv.className = 'result success';
+            resultDiv.innerHTML = '✅ Payment request created successfully!';
+            resultDiv.style.display = 'block';
+
+            paymentInfo.innerHTML = `
+                <p><strong>Payment ID:</strong> <span id="paymentId">${data.id}</span>
+                   <button class="copy-btn" onclick="copyToClipboard('${data.id}')">Copy</button>
+                </p>
+                <p><strong>Amount:</strong> ${data.amount} ${data.currency}</p>
+                <p><strong>Address:</strong> <span id="paymentAddress">${data.address}</span>
+                   <button class="copy-btn" onclick="copyToClipboard('${data.address}')">Copy</button>
+                </p>
+                <p><strong>Order ID:</strong> ${data.order_id}</p>
+                <p><strong>Status:</strong> <span class="status-indicator status-pending"></span>Pending</p>
+                <p><strong>Expires:</strong> ${new Date(data.expires_at).toLocaleString()}</p>
+                <button class="btn" onclick="checkPaymentStatus('${data.id}')" style="width: auto; margin-top: 15px;">
+                    🔍 Check Payment Status
+                </button>
+            `;
+
+            // Generate QR code (placeholder)
+            generateQRCode(data.address, data.amount, data.currency);
+
+            paymentDetails.style.display = 'block';
+        }
+
+        function showError(error) {
+            const resultDiv = document.getElementById('result');
+
+            resultDiv.className = 'result error';
+            resultDiv.innerHTML = '❌ Error: ' + error;
+            resultDiv.style.display = 'block';
+        }
+
+        function generateQRCode(address, amount, currency) {
+            const qrCodeContainer = document.getElementById('qrCodeContainer');
+
+            // Create QR code URL for crypto payments
+            const qrData = `${currency.toLowerCase()}:${address}?amount=${amount}`;
+            const qrSize = 200;
+
+            // Using QR Server API as placeholder
+            const qrImageUrl = `https://api.qrserver.com/v1/create-qr-code/?size=${qrSize}x${qrSize}&data=${encodeURIComponent(qrData)}`;
+
+            qrCodeContainer.innerHTML = `
+                <p>Scan to pay ${amount} ${currency}</p>
+                <img src="${qrImageUrl}" alt="QR Code" />
+            `;
+        }
+
+        async function checkPaymentStatus(paymentId) {
+            try {
+                const response = await fetch(`${API_BASE}/payments/${paymentId}/status`, {
+                    headers: {
+                        'x-api-key': API_KEY
+                    }
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    const statusElement = document.querySelector('#paymentInfo p:nth-child(5)');
+                    const statusIndicator = statusElement.querySelector('.status-indicator');
+                    const statusText = statusElement.querySelector('span:last-child');
+
+                    statusIndicator.className = `status-indicator status-${result.data.status}`;
+                    statusText.textContent = result.data.status.charAt(0).toUpperCase() + result.data.status.slice(1);
+
+                    if (result.data.status === 'paid') {
+                        alert('🎉 Payment received successfully!');
+                    } else if (result.data.status === 'expired') {
+                        alert('⏰ Payment request has expired.');
+                    }
+                } else {
+                    alert('Error checking payment status: ' + result.error);
+                }
+            } catch (error) {
+                alert('Network error: ' + error.message);
+            }
+        }
+
+        function copyToClipboard(text) {
+            navigator.clipboard.writeText(text).then(() => {
+                alert('Copied to clipboard!');
+            }).catch(() => {
+                // Fallback for older browsers
+                const textArea = document.createElement('textarea');
+                textArea.value = text;
+                document.body.appendChild(textArea);
+                textArea.select();
+                document.execCommand('copy');
+                document.body.removeChild(textArea);
+                alert('Copied to clipboard!');
+            });
+        }
+
+        // Auto-generate order ID
+        document.getElementById('orderId').value = 'order_' + Date.now();
+
+        // Set default expiration to 1 hour
+        document.getElementById('expiresIn').value = 3600;
+    </script>
+</body>
+</html>

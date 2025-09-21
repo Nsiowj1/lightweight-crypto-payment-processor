@@ -1,0 +1,33 @@
+services:
+  - type: web
+    name: crypto-payment-processor
+    runtime: node
+    buildCommand: npm ci
+    startCommand: npm start
+    healthCheckPath: /api/health
+    plan: free
+    autoDeploy: true
+    disk:
+      name: crypto-payment-processor-disk
+      mountPath: /app
+      sizeGB: 1
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 3000
+      # Add your environment variables here
+      # - key: SUPABASE_URL
+      #   fromSecret: supabase-url
+      # - key: SUPABASE_ANON_KEY
+      #   fromSecret: supabase-anon-key
+      # - key: SUPABASE_SERVICE_ROLE_KEY
+      #   fromSecret: supabase-service-role-key
+      # - key: UPSTASH_REDIS_REST_URL
+      #   fromSecret: upstash-redis-url
+      # - key: UPSTASH_REDIS_REST_TOKEN
+      #   fromSecret: upstash-redis-token
+      # - key: JWT_SECRET
+      #   fromSecret: jwt-secret
+      # - key: WEBHOOK_SECRET
+      #   fromSecret: webhook-secret
