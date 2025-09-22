@@ -18,7 +18,16 @@ const { verifyApiKey } = require('./middleware/authMiddleware');
 const healthRoutes = require('./routes/healthRoutes');
 const paymentRoutes = require('./routes/paymentRoutes');
 const webhookRoutes = require('./routes/webhookRoutes');
-const merchantRoutes = require('./routes/merchantRoutes');
+
+// Try to load merchant routes with error handling
+let merchantRoutes;
+try {
+  merchantRoutes = require('./routes/merchantRoutes');
+  console.log('✅ Merchant routes loaded successfully');
+} catch (error) {
+  console.error('❌ Failed to load merchant routes:', error);
+  merchantRoutes = express.Router(); // fallback empty router
+}
 
 // Import services
 const paymentMonitorService = require('./services/paymentMonitorService');
@@ -58,6 +67,7 @@ app.use('/api/health', healthRoutes);
 
 // Public merchant registration endpoint
 app.use('/api/merchants', merchantRoutes);
+console.log('✅ Mounted /api/merchants route');
 
 // API routes with authentication
 app.use('/api/payments', verifyApiKey, paymentRoutes);
