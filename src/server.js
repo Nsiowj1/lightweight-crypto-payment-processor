@@ -18,6 +18,7 @@ const { verifyApiKey } = require('./middleware/authMiddleware');
 const healthRoutes = require('./routes/healthRoutes');
 const paymentRoutes = require('./routes/paymentRoutes');
 const webhookRoutes = require('./routes/webhookRoutes');
+const merchantRoutes = require('./routes/merchantRoutes');
 
 // Import services
 const paymentMonitorService = require('./services/paymentMonitorService');
@@ -54,6 +55,9 @@ app.use(express.static('public'));
 
 // Health check endpoint (no auth required)
 app.use('/api/health', healthRoutes);
+
+// Public merchant registration endpoint
+app.use('/api/merchants', merchantRoutes);
 
 // API routes with authentication
 app.use('/api/payments', verifyApiKey, paymentRoutes);
