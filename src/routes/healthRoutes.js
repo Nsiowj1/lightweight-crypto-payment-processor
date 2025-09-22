@@ -52,13 +52,17 @@ router.get('/', async (req, res) => {
   }
 
   // Check external API endpoints
-  healthCheck.services.external_apis = await checkExternalApis();
+  const externalApiResults = await checkExternalApis();
+  healthCheck.services.external_apis = externalApiResults;
 
-  // Determine overall health
-  const allServicesHealthy = Object.values(healthCheck.services).every(
-    service => service.status === 'healthy'
+  // Determine overall health - check all services including external APIs
+  const supabaseStatus = healthCheck.services.supabase.status === 'healthy';
+  const redisStatus = healthCheck.services.redis.status === 'healthy';
+  const externalApisStatus = Object.values(externalApiResults).every(
+    api => api.status === 'healthy'
   );
 
+  const allServicesHealthy = supabaseStatus && redisStatus && externalApisStatus;
   healthCheck.status = allServicesHealthy ? 'healthy' : 'degraded';
 
   const statusCode = allServicesHealthy ? 200 : 503;
