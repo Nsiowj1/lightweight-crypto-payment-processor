@@ -4,7 +4,47 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Lightweight Crypto Payment Processor</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
+        :root {
+            --primary-50: #eff6ff;
+            --primary-100: #dbeafe;
+            --primary-200: #bfdbfe;
+            --primary-300: #93c5fd;
+            --primary-400: #60a5fa;
+            --primary-500: #3b82f6;
+            --primary-600: #2563eb;
+            --primary-700: #1d4ed8;
+            --primary-800: #1e40af;
+            --primary-900: #1e3a8a;
+
+            --gray-50: #f9fafb;
+            --gray-100: #f3f4f6;
+            --gray-200: #e5e7eb;
+            --gray-300: #d1d5db;
+            --gray-400: #9ca3af;
+            --gray-500: #6b7280;
+            --gray-600: #4b5563;
+            --gray-700: #374151;
+            --gray-800: #1f2937;
+            --gray-900: #111827;
+
+            --success: #10b981;
+            --warning: #f59e0b;
+            --error: #ef4444;
+
+            --font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+
+            --border-radius: 8px;
+            --border-radius-lg: 12px;
+            --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+            --shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
+            --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+            --shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
+        }
+
         * {
             margin: 0;
             padding: 0;
@@ -12,472 +52,704 @@
         }
 
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
-            line-height: 1.6;
-            color: #333;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            min-height: 100vh;
-            padding: 20px;
+            font-family: var(--font-family);
+            font-size: 14px;
+            line-height: 1.5;
+            color: var(--gray-900);
+            background: var(--gray-50);
+            overflow-x: hidden;
         }
 
         .container {
-            max-width: 800px;
+            max-width: 1200px;
             margin: 0 auto;
-            background: white;
-            border-radius: 10px;
-            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
-            overflow: hidden;
+            padding: 0 20px;
         }
 
-        .header {
-            background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
-            color: white;
-            padding: 30px;
-            text-align: center;
-        }
-
-        .header h1 {
-            font-size: 2.5rem;
-            margin-bottom: 10px;
-            font-weight: 700;
-        }
-
-        .header p {
-            font-size: 1.1rem;
-            opacity: 0.9;
-        }
-
-        .form-container {
-            padding: 40px;
-        }
-
-        .form-group {
-            margin-bottom: 25px;
-        }
-
-        .form-group label {
-            display: block;
-            margin-bottom: 8px;
-            font-weight: 600;
-            color: #4f46e5;
-            font-size: 0.95rem;
-        }
-
-        .form-group input,
-        .form-group select,
-        .form-group textarea {
-            width: 100%;
-            padding: 12px 16px;
-            border: 2px solid #e5e7eb;
-            border-radius: 8px;
-            font-size: 1rem;
-            transition: border-color 0.3s ease;
-        }
-
-        .form-group input:focus,
-        .form-group select:focus,
-        .form-group textarea:focus {
-            outline: none;
-            border-color: #4f46e5;
-            box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
-        }
-
-        .form-row {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 20px;
-        }
-
-        .crypto-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
-            gap: 15px;
-            margin-bottom: 25px;
-        }
-
-        .crypto-option {
-            position: relative;
-            cursor: pointer;
-        }
-
-        .crypto-option input[type="radio"] {
-            position: absolute;
-            opacity: 0;
-            width: 100%;
-            height: 100%;
-            cursor: pointer;
-        }
-
-        .crypto-option label {
-            display: block;
-            padding: 15px;
-            border: 2px solid #e5e7eb;
-            border-radius: 8px;
-            text-align: center;
-            font-weight: 600;
-            color: #6b7280;
+        /* Navigation */
+        .navbar {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid var(--gray-200);
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 1000;
             transition: all 0.3s ease;
-            cursor: pointer;
         }
 
-        .crypto-option input[type="radio"]:checked + label {
-            border-color: #4f46e5;
-            background: #4f46e5;
-            color: white;
+        .navbar.scrolled {
+            background: rgba(255, 255, 255, 0.98);
+            box-shadow: var(--shadow);
         }
 
-        .crypto-option label:hover {
-            border-color: #4f46e5;
-            transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        .navbar .container {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            height: 64px;
+        }
+
+        .navbar-brand {
+            font-size: 20px;
+            font-weight: 700;
+            color: var(--primary-600);
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .navbar-brand::before {
+            content: '💰';
+            font-size: 24px;
+        }
+
+        .navbar-nav {
+            display: flex;
+            align-items: center;
+            gap: 24px;
+        }
+
+        .nav-link {
+            color: var(--gray-600);
+            text-decoration: none;
+            font-weight: 500;
+            padding: 8px 12px;
+            border-radius: var(--border-radius);
+            transition: all 0.2s ease;
+            position: relative;
+        }
+
+        .nav-link:hover {
+            color: var(--primary-600);
+            background: var(--primary-50);
+        }
+
+        .nav-link.active::after {
+            content: '';
+            position: absolute;
+            bottom: -25px;
+            left: 12px;
+            right: 12px;
+            height: 3px;
+            background: linear-gradient(90deg, var(--primary-500), var(--primary-700));
+            border-radius: 2px;
         }
 
         .btn {
-            background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
-            color: white;
-            border: none;
-            padding: 15px 30px;
-            border-radius: 8px;
-            font-size: 1.1rem;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 16px;
+            font-size: 14px;
             font-weight: 600;
+            text-decoration: none;
+            border: none;
+            border-radius: var(--border-radius);
             cursor: pointer;
-            transition: transform 0.3s ease;
-            width: 100%;
+            transition: all 0.2s ease;
+            background: var(--primary-600);
+            color: white;
         }
 
         .btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+            background: var(--primary-700);
+            transform: translateY(-1px);
+            box-shadow: var(--shadow-lg);
         }
 
-        .btn:disabled {
-            opacity: 0.6;
-            cursor: not-allowed;
-            transform: none;
+        .btn-secondary {
+            background: white;
+            color: var(--gray-700);
+            border: 1px solid var(--gray-300);
         }
 
-        .result {
-            margin-top: 30px;
-            padding: 20px;
-            border-radius: 8px;
+        .btn-secondary:hover {
+            background: var(--gray-50);
+            border-color: var(--gray-400);
+        }
+
+        /* Main content */
+        .main-content {
+            min-height: 100vh;
+            padding-top: 64px;
+        }
+
+        /* Page transitions */
+        .page {
             display: none;
+            animation: fadeIn 0.3s ease-in-out;
         }
 
-        .result.success {
-            background: #d1fae5;
-            border: 1px solid #10b981;
-            color: #065f46;
+        .page.active {
+            display: block;
         }
 
-        .result.error {
-            background: #fee2e2;
-            border: 1px solid #ef4444;
-            color: #991b1b;
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
         }
 
-        .payment-details {
-            background: #f8fafc;
-            border: 1px solid #e5e7eb;
-            border-radius: 8px;
-            padding: 20px;
-            margin-top: 20px;
-        }
-
-        .payment-details h3 {
-            margin-bottom: 15px;
-            color: #4f46e5;
-        }
-
-        .qr-code {
-            text-align: center;
-            margin: 20px 0;
-        }
-
-        .qr-code img {
-            max-width: 200px;
-            border: 2px solid #e5e7eb;
-            border-radius: 8px;
-        }
-
-        .copy-btn {
-            background: #6b7280;
+        /* Hero section */
+        .hero {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: white;
-            border: none;
-            padding: 8px 16px;
-            border-radius: 4px;
-            cursor: pointer;
-            font-size: 0.9rem;
-            margin-left: 10px;
+            padding: 120px 0 80px;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
         }
 
-        .copy-btn:hover {
-            background: #4b5563;
+        .hero::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><pattern id="grain" width="100" height="100" patternUnits="userSpaceOnUse"><circle cx="25" cy="25" r="1" fill="white" opacity="0.1"/><circle cx="75" cy="75" r="1.5" fill="white" opacity="0.08"/><circle cx="10" cy="90" r="0.8" fill="white" opacity="0.15"/><circle cx="90" cy="10" r="0.6" fill="white" opacity="0.12"/></pattern></defs><rect width="100" height="100" fill="url(%23grain)"/></svg>');
+            pointer-events: none;
         }
 
-        .status-indicator {
-            display: inline-block;
-            width: 8px;
-            height: 8px;
-            border-radius: 50%;
-            margin-right: 8px;
+        .hero-content {
+            position: relative;
+            z-index: 1;
         }
 
-        .status-pending {
-            background: #f59e0b;
+        .hero h1 {
+            font-size: clamp(32px, 5vw, 64px);
+            font-weight: 700;
+            margin-bottom: 24px;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
         }
 
-        .status-paid {
-            background: #10b981;
+        .hero p {
+            font-size: 20px;
+            margin-bottom: 40px;
+            opacity: 0.9;
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
         }
 
-        .status-expired {
-            background: #ef4444;
+        .hero-buttons {
+            display: flex;
+            gap: 16px;
+            justify-content: center;
+            flex-wrap: wrap;
         }
 
+        /* Cards */
+        .card {
+            background: white;
+            border-radius: var(--border-radius-lg);
+            padding: 32px;
+            box-shadow: var(--shadow-lg);
+            border: 1px solid var(--gray-200);
+            transition: all 0.3s ease;
+        }
+
+        .card:hover {
+            box-shadow: var(--shadow-xl);
+            transform: translateY(-4px);
+        }
+
+        .card-icon {
+            font-size: 48px;
+            margin-bottom: 16px;
+            display: block;
+        }
+
+        .card-title {
+            font-size: 20px;
+            font-weight: 600;
+            margin-bottom: 12px;
+            color: var(--gray-900);
+        }
+
+        .card-text {
+            color: var(--gray-600);
+            line-height: 1.6;
+        }
+
+        /* Form styles */
+        .form-group {
+            margin-bottom: 24px;
+        }
+
+        .form-label {
+            display: block;
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--gray-700);
+            margin-bottom: 8px;
+        }
+
+        .form-input, .form-textarea, .form-select {
+            width: 100%;
+            padding: 12px 16px;
+            border: 1px solid var(--gray-300);
+            border-radius: var(--border-radius);
+            font-size: 14px;
+            transition: all 0.2s ease;
+            background: white;
+        }
+
+        .form-input:focus, .form-textarea:focus, .form-select:focus {
+            outline: none;
+            border-color: var(--primary-500);
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+        }
+
+        .form-textarea {
+            resize: vertical;
+            min-height: 100px;
+        }
+
+        /* Grid layouts */
+        .grid {
+            display: grid;
+            gap: 24px;
+        }
+
+        .grid-1 { grid-template-columns: 1fr; }
+        .grid-2 { grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); }
+        .grid-3 { grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); }
+        .grid-4 { grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); }
+
+        /* Responsive design */
         @media (max-width: 768px) {
-            .form-row {
-                grid-template-columns: 1fr;
-            }
+            .container { padding: 0 16px; }
 
-            .crypto-grid {
-                grid-template-columns: repeat(2, 1fr);
-            }
+            .navbar-nav { display: none; }
 
-            .header h1 {
-                font-size: 2rem;
-            }
+            .hero { padding: 100px 0 60px; }
+
+            .hero-buttons { flex-direction: column; align-items: center; }
+
+            .grid-2, .grid-3, .grid-4 { grid-template-columns: 1fr; }
+        }
+
+        /* Loading and animations */
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid var(--gray-300);
+            border-radius: 50%;
+            border-top-color: var(--primary-600);
+            animation: spin 1s ease-in-out infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* Alert styles */
+        .alert {
+            padding: 16px;
+            border-radius: var(--border-radius);
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .alert-success {
+            background: var(--primary-50);
+            border: 1px solid var(--primary-200);
+            color: var(--primary-800);
+        }
+
+        .alert-error {
+            background: #fef2f2;
+            border: 1px solid #fecaca;
+            color: #dc2626;
+        }
+
+        /* Utility classes */
+        .text-center { text-align: center; }
+        .text-muted { color: var(--gray-500); }
+        .mb-0 { margin-bottom: 0; }
+        .mb-1 { margin-bottom: 8px; }
+        .mb-2 { margin-bottom: 16px; }
+        .mb-3 { margin-bottom: 24px; }
+        .mb-4 { margin-bottom: 32px; }
+
+        .hidden { display: none !important; }
+
+        /* Crypto symbols */
+        .crypto-symbols {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            opacity: 0.1;
+            font-size: 24px;
+            line-height: 1;
         }
     </style>
 </head>
 <body>
-    <div class="container">
-        <div class="header">
-            <h1>💰 Crypto Payment Processor</h1>
-            <p>Create secure cryptocurrency payment requests</p>
-        </div>
-
-        <div class="form-container">
-            <form id="paymentForm">
-                <div class="form-row">
-                    <div class="form-group">
-                        <label for="amount">Amount *</label>
-                        <input type="number" id="amount" name="amount" step="0.00000001" min="0.00000001" required>
-                    </div>
-                    <div class="form-group">
-                        <label for="currency">Currency *</label>
-                        <select id="currency" name="currency" required>
-                            <option value="">Select Currency</option>
-                            <option value="BTC">Bitcoin (BTC)</option>
-                            <option value="LTC">Litecoin (LTC)</option>
-                            <option value="ETH">Ethereum (ETH)</option>
-                            <option value="BNB">BNB Smart Chain (BNB)</option>
-                            <option value="SOL">Solana (SOL)</option>
-                            <option value="USDT">Tether (USDT)</option>
-                            <option value="USDC">USD Coin (USDC)</option>
-                        </select>
-                    </div>
-                </div>
-
-                <div class="form-group">
-                    <label for="orderId">Order ID *</label>
-                    <input type="text" id="orderId" name="order_id" required>
-                </div>
-
-                <div class="form-group">
-                    <label for="description">Description</label>
-                    <textarea id="description" name="description" rows="3" placeholder="Payment description (optional)"></textarea>
-                </div>
-
-                <div class="form-group">
-                    <label for="expiresIn">Expires In (seconds)</label>
-                    <input type="number" id="expiresIn" name="expires_in" value="3600" min="60" max="86400">
-                    <small style="color: #6b7280;">Default: 1 hour (3600 seconds), Max: 24 hours</small>
-                </div>
-
-                <div class="form-group">
-                    <label for="callbackUrl">Callback URL</label>
-                    <input type="url" id="callbackUrl" name="callback_url" placeholder="https://your-site.com/payment/callback">
-                    <small style="color: #6b7280;">We'll notify this URL when payment is received</small>
-                </div>
-
-                <button type="submit" class="btn" id="submitBtn">
-                    🚀 Create Payment Request
-                </button>
-            </form>
-
-            <div id="result" class="result"></div>
-
-            <div id="paymentDetails" class="payment-details" style="display: none;">
-                <h3>Payment Details</h3>
-                <div id="paymentInfo"></div>
-                <div class="qr-code" id="qrCodeContainer"></div>
+    <!-- Navigation -->
+    <nav class="navbar" id="navbar">
+        <div class="container">
+            <a href="#home" class="navbar-brand" onclick="navigateTo('home')">CryptoPay</a>
+            <div class="navbar-nav">
+                <a href="#home" class="nav-link" onclick="navigateTo('home')">Home</a>
+                <a href="#register" class="nav-link" onclick="navigateTo('register')">Register</a>
+                <a href="#dashboard" class="nav-link" onclick="navigateTo('dashboard')">Dashboard</a>
+                <a href="#payment" class="nav-link" onclick="navigateTo('payment')">Make Payment</a>
             </div>
         </div>
-    </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        <!-- Home/Landing Page -->
+        <div id="home" class="page active">
+            <section class="hero">
+                <div class="crypto-symbols">
+                    ₿<br>Ξ<br>◎<br>₮
+                </div>
+                <div class="container hero-content">
+                    <h1>Simple & Secure<br>Crypto Payments</h1>
+                    <p>Accept cryptocurrency payments instantly with our lightweight, self-hosted payment processor supporting Bitcoin, Ethereum, Solana, and more.</p>
+                    <div class="hero-buttons">
+                        <a href="#register" class="btn" onclick="navigateTo('register')">Get Started</a>
+                        <a href="#dashboard" class="btn btn-secondary" onclick="navigateTo('dashboard')">View Demo</a>
+                    </div>
+                </div>
+            </section>
+
+            <section class="container" style="padding: 80px 0;">
+                <div class="grid grid-3">
+                    <div class="card text-center">
+                        <span class="card-icon">⚡</span>
+                        <h3 class="card-title">Instant Processing</h3>
+                        <p class="card-text">Payments are confirmed in minutes, not days. Get paid faster with real-time blockchain monitoring.</p>
+                    </div>
+                    <div class="card text-center">
+                        <span class="card-icon">🔒</span>
+                        <h3 class="card-title">Bank-Grade Security</h3>
+                        <p class="card-text">Self-hosted and secure. No third-party intermediaries. Full control over your payment data.</p>
+                    </div>
+                    <div class="card text-center">
+                        <span class="card-icon">🌍</span>
+                        <h3 class="card-title">Global Acceptance</h3>
+                        <p class="card-text">Accept payments from anywhere in the world. No international transfer fees or currency restrictions.</p>
+                    </div>
+                </div>
+            </section>
+        </div>
+
+        <!-- Merchant Registration -->
+        <div id="register" class="page">
+            <div class="container" style="padding: 80px 0;">
+                <div style="max-width: 500px; margin: 0 auto;">
+                    <div class="card">
+                        <h2 class="card-title text-center mb-4">Merchant Registration</h2>
+                        <form id="registerForm">
+                            <div class="form-group">
+                                <label for="registerEmail" class="form-label">Email *</label>
+                                <input type="email" id="registerEmail" class="form-input" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="registerName" class="form-label">Business Name</label>
+                                <input type="text" id="registerName" class="form-input">
+                            </div>
+                            <div class="form-group">
+                                <label for="registerDescription" class="form-label">Description</label>
+                                <textarea id="registerDescription" class="form-textarea" rows="3"></textarea>
+                            </div>
+                            <button type="submit" class="btn" style="width: 100%;">Create Account</button>
+                        </form>
+                        <div id="registerMessage" class="mt-3"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Merchant Dashboard -->
+        <div id="dashboard" class="page">
+            <div class="container" style="padding: 40px 0;">
+                <div class="mb-4" id="dashboardHeader">
+                    <h1>Dashboard</h1>
+                    <p class="text-muted">Manage your payments and account</p>
+                </div>
+
+                <div id="dashboardContent">
+                    <div class="alert alert-error">
+                        🔑 Please set your API key in the navigation to access your dashboard.
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Payment Creation -->
+        <div id="payment" class="page">
+            <div class="container" style="padding: 40px 0;">
+                <div style="max-width: 600px; margin: 0 auto;">
+                    <div class="card">
+                        <h2 class="card-title text-center mb-4">Create Payment</h2>
+                        <form id="paymentForm">
+                            <div class="form-group">
+                                <label for="paymentAmount" class="form-label">Amount *</label>
+                                <input type="number" id="paymentAmount" class="form-input" step="0.00000001" min="0.00000001" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="paymentCurrency" class="form-label">Currency *</label>
+                                <select id="paymentCurrency" class="form-select" required>
+                                    <option value="">Select Currency</option>
+                                    <option value="BTC">Bitcoin (BTC)</option>
+                                    <option value="LTC">Litecoin (LTC)</option>
+                                    <option value="ETH">Ethereum (ETH)</option>
+                                    <option value="BNB">BNB Smart Chain (BNB)</option>
+                                    <option value="SOL">Solana (SOL)</option>
+                                    <option value="USDT">Tether (USDT)</option>
+                                    <option value="USDC">USD Coin (USDC)</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="paymentOrderId" class="form-label">Order ID *</label>
+                                <input type="text" id="paymentOrderId" class="form-input" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="paymentDescription" class="form-label">Description</label>
+                                <textarea id="paymentDescription" class="form-textarea" rows="3"></textarea>
+                            </div>
+                            <div class="form-group">
+                                <label for="paymentExpiresIn" class="form-label">Expires In (seconds)</label>
+                                <input type="number" id="paymentExpiresIn" class="form-input" value="3600" min="60" max="86400">
+                                <small class="text-muted">Default: 1 hour (3600 seconds), Max: 24 hours</small>
+                            </div>
+                            <button type="submit" class="btn" style="width: 100%;">Create Payment</button>
+                        </form>
+                        <div id="paymentMessage" class="mt-3"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
 
     <script>
+        // Global variables
         const API_BASE = window.location.origin + '/api';
-        const API_KEY = 'your-api-key-here'; // Replace with actual API key
+        let currentApiKey = localStorage.getItem('cryptoPayApiKey') || '';
 
-        document.getElementById('paymentForm').addEventListener('submit', async (e) => {
+        // Navigation and routing
+        function navigateTo(page) {
+            // Update URL hash
+            window.location.hash = page;
+
+            // Update active nav link
+            document.querySelectorAll('.nav-link').forEach(link => {
+                link.classList.remove('active');
+            });
+            const activeLink = document.querySelector(`[onclick="navigateTo('${page}')"]`);
+            if (activeLink) {
+                activeLink.classList.add('active');
+            }
+
+            // Show/hide pages
+            document.querySelectorAll('.page').forEach(p => {
+                p.classList.remove('active');
+            });
+            const targetPage = document.getElementById(page);
+            if (targetPage) {
+                targetPage.classList.add('active');
+            }
+
+            // Load page-specific content
+            loadPageContent(page);
+
+            // Scroll to top
+            window.scrollTo(0, 0);
+        }
+
+        function loadPageContent(page) {
+            switch(page) {
+                case 'dashboard':
+                    loadDashboard();
+                    break;
+                case 'register':
+                    // Auto-generate API key for demo
+                    break;
+                case 'payment':
+                    // Auto-generate order ID
+                    document.getElementById('paymentOrderId').value = 'order_' + Date.now();
+                    break;
+            }
+        }
+
+        // Navbar scroll effect
+        let lastScrollTop = 0;
+        window.addEventListener('scroll', () => {
+            const navbar = document.getElementById('navbar');
+            const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+
+            if (scrollTop > 50) {
+                navbar.classList.add('scrolled');
+            } else {
+                navbar.classList.remove('scrolled');
+            }
+
+            lastScrollTop = scrollTop;
+        });
+
+        // Handle initial routing
+        window.addEventListener('load', () => {
+            const hash = window.location.hash.replace('#', '') || 'home';
+            navigateTo(hash);
+        });
+
+        // Handle hash changes
+        window.addEventListener('hashchange', () => {
+            const hash = window.location.hash.replace('#', '') || 'home';
+            navigateTo(hash);
+        });
+
+        // Merchant registration
+        document.getElementById('registerForm').addEventListener('submit', async (e) => {
             e.preventDefault();
 
-            const submitBtn = document.getElementById('submitBtn');
-            const resultDiv = document.getElementById('result');
-            const paymentDetails = document.getElementById('paymentDetails');
+            const email = document.getElementById('registerEmail').value;
+            const name = document.getElementById('registerName').value;
+            const description = document.getElementById('registerDescription').value;
 
-            // Disable form
-            submitBtn.disabled = true;
-            submitBtn.textContent = '⏳ Creating Payment...';
-
-            // Clear previous results
-            resultDiv.style.display = 'none';
-            paymentDetails.style.display = 'none';
+            const messageDiv = document.getElementById('registerMessage');
+            messageDiv.innerHTML = '<div class="alert alert-success"><div class="loading"></div> Creating merchant account...</div>';
 
             try {
-                const formData = new FormData(e.target);
-                const paymentData = {
-                    amount: parseFloat(formData.get('amount')),
-                    currency: formData.get('currency'),
-                    order_id: formData.get('order_id'),
-                    description: formData.get('description'),
-                    expires_in: parseInt(formData.get('expires_in')),
-                    callback_url: formData.get('callback_url'),
-                    metadata: {}
-                };
-
-                const response = await fetch(`${API_BASE}/payments`, {
+                const response = await fetch(`${API_BASE}/merchants`, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
-                        'x-api-key': API_KEY
                     },
-                    body: JSON.stringify(paymentData)
+                    body: JSON.stringify({
+                        email,
+                        name: name || undefined,
+                        description: description || undefined
+                    })
                 });
 
                 const result = await response.json();
 
                 if (result.success) {
-                    showSuccess(result.data);
-                } else {
-                    showError(result.error);
-                }
+                    messageDiv.innerHTML = `
+                        <div class="alert alert-success">
+                            ✅ Merchant registered successfully!<br>
+                            <strong>API Key:</strong> <code>${result.data.api_key}</code><br>
+                            <small>Save this API key securely - you cannot retrieve it later.</small>
+                        </div>
+                    `;
 
+                    // Store API key for demo
+                    localStorage.setItem('cryptoPayApiKey', result.data.api_key);
+                    currentApiKey = result.data.api_key;
+
+                    // Clear form
+                    e.target.reset();
+
+                    // Auto-navigate to dashboard after 3 seconds
+                    setTimeout(() => {
+                        navigateTo('dashboard');
+                    }, 3000);
+                } else {
+                    messageDiv.innerHTML = `<div class="alert alert-error">❌ ${result.error}</div>`;
+                }
             } catch (error) {
-                showError('Network error: ' + error.message);
-            } finally {
-                // Re-enable form
-                submitBtn.disabled = false;
-                submitBtn.textContent = '🚀 Create Payment Request';
+                messageDiv.innerHTML = `<div class="alert alert-error">❌ Network error: ${error.message}</div>`;
             }
         });
 
-        function showSuccess(data) {
-            const resultDiv = document.getElementById('result');
-            const paymentDetails = document.getElementById('paymentDetails');
-            const paymentInfo = document.getElementById('paymentInfo');
+        // Payment creation (placeholder)
+        document.getElementById('paymentForm').addEventListener('submit', (e) => {
+            e.preventDefault();
 
-            resultDiv.className = 'result success';
-            resultDiv.innerHTML = '✅ Payment request created successfully!';
-            resultDiv.style.display = 'block';
-
-            paymentInfo.innerHTML = `
-                <p><strong>Payment ID:</strong> <span id="paymentId">${data.id}</span>
-                   <button class="copy-btn" onclick="copyToClipboard('${data.id}')">Copy</button>
-                </p>
-                <p><strong>Amount:</strong> ${data.amount} ${data.currency}</p>
-                <p><strong>Address:</strong> <span id="paymentAddress">${data.address}</span>
-                   <button class="copy-btn" onclick="copyToClipboard('${data.address}')">Copy</button>
-                </p>
-                <p><strong>Order ID:</strong> ${data.order_id}</p>
-                <p><strong>Status:</strong> <span class="status-indicator status-pending"></span>Pending</p>
-                <p><strong>Expires:</strong> ${new Date(data.expires_at).toLocaleString()}</p>
-                <button class="btn" onclick="checkPaymentStatus('${data.id}')" style="width: auto; margin-top: 15px;">
-                    🔍 Check Payment Status
-                </button>
-            `;
-
-            // Generate QR code (placeholder)
-            generateQRCode(data.address, data.amount, data.currency);
-
-            paymentDetails.style.display = 'block';
-        }
-
-        function showError(error) {
-            const resultDiv = document.getElementById('result');
-
-            resultDiv.className = 'result error';
-            resultDiv.innerHTML = '❌ Error: ' + error;
-            resultDiv.style.display = 'block';
-        }
-
-        function generateQRCode(address, amount, currency) {
-            const qrCodeContainer = document.getElementById('qrCodeContainer');
-
-            // Create QR code URL for crypto payments
-            const qrData = `${currency.toLowerCase()}:${address}?amount=${amount}`;
-            const qrSize = 200;
-
-            // Using QR Server API as placeholder
-            const qrImageUrl = `https://api.qrserver.com/v1/create-qr-code/?size=${qrSize}x${qrSize}&data=${encodeURIComponent(qrData)}`;
-
-            qrCodeContainer.innerHTML = `
-                <p>Scan to pay ${amount} ${currency}</p>
-                <img src="${qrImageUrl}" alt="QR Code" />
-            `;
-        }
-
-        async function checkPaymentStatus(paymentId) {
-            try {
-                const response = await fetch(`${API_BASE}/payments/${paymentId}/status`, {
-                    headers: {
-                        'x-api-key': API_KEY
-                    }
-                });
-
-                const result = await response.json();
-
-                if (result.success) {
-                    const statusElement = document.querySelector('#paymentInfo p:nth-child(5)');
-                    const statusIndicator = statusElement.querySelector('.status-indicator');
-                    const statusText = statusElement.querySelector('span:last-child');
-
-                    statusIndicator.className = `status-indicator status-${result.data.status}`;
-                    statusText.textContent = result.data.status.charAt(0).toUpperCase() + result.data.status.slice(1);
-
-                    if (result.data.status === 'paid') {
-                        alert('🎉 Payment received successfully!');
-                    } else if (result.data.status === 'expired') {
-                        alert('⏰ Payment request has expired.');
-                    }
-                } else {
-                    alert('Error checking payment status: ' + result.error);
-                }
-            } catch (error) {
-                alert('Network error: ' + error.message);
+            if (!currentApiKey) {
+                document.getElementById('paymentMessage').innerHTML = `
+                    <div class="alert alert-error">
+                        🔑 Please register first or set your API key
+                    </div>
+                `;
+                return;
             }
+
+            const messageDiv = document.getElementById('paymentMessage');
+            messageDiv.innerHTML = '<div class="alert alert-success"><div class="loading"></div> Creating payment...</div>';
+
+            // For now, show demo response
+            setTimeout(() => {
+                messageDiv.innerHTML = `
+                    <div class="alert alert-success">
+                        ✅ Payment created! This is a demo - integrate with your backend API.
+                        <br><br>
+                        Payment details would show here: QR code, address, status tracking, etc.
+                    </div>
+                `;
+            }, 2000);
+        });
+
+        // Dashboard loading (placeholder)
+        function loadDashboard() {
+            const content = document.getElementById('dashboardContent');
+            const header = document.getElementById('dashboardHeader');
+
+            if (!currentApiKey) {
+                content.innerHTML = `
+                    <div class="alert alert-error">
+                        🔑 Please register first or enter your API key to access the dashboard.
+                    </div>
+                `;
+                header.style.display = 'none';
+                return;
+            }
+
+            header.style.display = 'block';
+
+            content.innerHTML = `
+                <div class="grid grid-2 mb-4">
+                    <div class="card">
+                        <h3>Quick Actions</h3>
+                        <div style="display: grid; gap: 12px; margin-top: 16px;">
+                            <a href="#payment" class="btn" onclick="navigateTo('payment')">Create New Payment</a>
+                            <button class="btn btn-secondary">View All Payments</button>
+                        </div>
+                    </div>
+                    <div class="card">
+                        <h3>Account Info</h3>
+                        <p class="text-muted mb-1">API Key (masked): ****${currentApiKey.slice(-4)}</p>
+                        <button class="btn btn-secondary" onclick="alert('API key regeneration would go here')">Regenerate API Key</button>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <h3>Recent Activity</h3>
+                    <div style="margin-top: 16px;">
+                        <div class="alert alert-success">
+                            🚀 Dashboard loaded! This is a demo interface. In a full implementation, you'd see:
+                            <ul style="margin-top: 8px;">
+                                <li>• Payment history and status tracking</li>
+                                <li>• Revenue analytics and charts</li>
+                                <li>• Webhook management</li>
+                                <li>• Profile settings and store configuration</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            `;
         }
 
-        function copyToClipboard(text) {
-            navigator.clipboard.writeText(text).then(() => {
-                alert('Copied to clipboard!');
-            }).catch(() => {
-                // Fallback for older browsers
-                const textArea = document.createElement('textarea');
-                textArea.value = text;
-                document.body.appendChild(textArea);
-                textArea.select();
-                document.execCommand('copy');
-                document.body.removeChild(textArea);
-                alert('Copied to clipboard!');
-            });
-        }
-
-        // Auto-generate order ID
-        document.getElementById('orderId').value = 'order_' + Date.now();
-
-        // Set default expiration to 1 hour
-        document.getElementById('expiresIn').value = 3600;
+        // Initialize
+        document.addEventListener('DOMContentLoaded', () => {
+            // Auto-generate order ID on payment page
+            const paymentOrderInput = document.getElementById('paymentOrderId');
+            if (paymentOrderInput) {
+                paymentOrderInput.value = 'order_' + Date.now();
+            }
+        });
     </script>
 </body>
 </html>
