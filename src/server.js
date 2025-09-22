@@ -73,8 +73,13 @@ console.log('✅ Mounted /api/merchants route');
 app.use('/api/payments', verifyApiKey, paymentRoutes);
 app.use('/api/webhooks', webhookRoutes);
 
-// Root endpoint
+// Root endpoint - serve frontend
 app.get('/', (req, res) => {
+  res.sendFile(require('path').join(__dirname, 'public', 'index.html'));
+});
+
+// API info endpoint
+app.get('/api/', (req, res) => {
   res.json({
     message: 'Lightweight Crypto Payment Processor API',
     version: '1.0.0',
