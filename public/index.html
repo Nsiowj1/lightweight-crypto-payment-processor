@@ -396,11 +396,11 @@
     <nav class="navbar" id="navbar">
         <div class="container">
             <a href="#home" class="navbar-brand" onclick="navigateTo('home')">CryptoPay</a>
-            <div class="navbar-nav">
-                <a href="#home" class="nav-link" onclick="navigateTo('home')">Home</a>
-                <a href="#register" class="nav-link" onclick="navigateTo('register')">Register</a>
-                <a href="#dashboard" class="nav-link" onclick="navigateTo('dashboard')">Dashboard</a>
-                <a href="#payment" class="nav-link" onclick="navigateTo('payment')">Make Payment</a>
+        <div class="navbar-nav">
+                <a href="#home" class="nav-link">Home</a>
+                <a href="#register" class="nav-link">Register</a>
+                <a href="#dashboard" class="nav-link">Dashboard</a>
+                <a href="#payment" class="nav-link">Make Payment</a>
             </div>
         </div>
     </nav>
@@ -547,7 +547,7 @@
             document.querySelectorAll('.nav-link').forEach(link => {
                 link.classList.remove('active');
             });
-            const activeLink = document.querySelector(`[onclick="navigateTo('${page}')"]`);
+            const activeLink = document.querySelector(`a[href="#${page}"]`);  
             if (activeLink) {
                 activeLink.classList.add('active');
             }
