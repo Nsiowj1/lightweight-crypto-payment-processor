@@ -598,17 +598,18 @@
             lastScrollTop = scrollTop;
         });
 
-        // Handle initial routing
-        window.addEventListener('load', () => {
+        // Handle initial routing and hash changes
+        function handleHashChange() {
             const hash = window.location.hash.replace('#', '') || 'home';
             navigateTo(hash);
-        });
+        }
 
-        // Handle hash changes
-        window.addEventListener('hashchange', () => {
-            const hash = window.location.hash.replace('#', '') || 'home';
-            navigateTo(hash);
-        });
+        window.addEventListener('load', handleHashChange);
+        window.addEventListener('hashchange', handleHashChange);
+
+        // Handle initial load immediately
+        const initialHash = window.location.hash.replace('#', '') || 'home';
+        navigateTo(initialHash);
 
         // Merchant registration
         document.getElementById('registerForm').addEventListener('submit', async (e) => {
