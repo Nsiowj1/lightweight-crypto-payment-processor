@@ -12,15 +12,12 @@ const { PORT, NODE_ENV } = require('./config/environment');
 
 // Import middleware
 const { errorHandler, notFound } = require('./middleware/errorMiddleware');
-const authMiddleware = require('./middleware/authMiddleware');
+const { verifyApiKey } = require('./middleware/authMiddleware');
 
 // Import routes
 const healthRoutes = require('./routes/healthRoutes');
 const paymentRoutes = require('./routes/paymentRoutes');
 const webhookRoutes = require('./routes/webhookRoutes');
-
-// Ensure webhookRoutes is a function
-const webhookRouter = typeof webhookRoutes === 'function' ? webhookRoutes : webhookRoutes.router;
 
 // Import services
 const paymentMonitorService = require('./services/paymentMonitorService');
@@ -59,8 +56,8 @@ app.use(express.static('public'));
 app.use('/api/health', healthRoutes);
 
 // API routes with authentication
-app.use('/api/payments', authMiddleware, paymentRoutes);
-app.use('/api/webhooks', webhookRouter);
+app.use('/api/payments', verifyApiKey, paymentRoutes);
+app.use('/api/webhooks', webhookRoutes);
 
 // Root endpoint
 app.get('/', (req, res) => {
@@ -76,7 +73,7 @@ app.get('/', (req, res) => {
 app.use(notFound);
 app.use(errorHandler);
 
-app.listen(PORT, async () => {
+const server = app.listen(PORT, async () => {
   console.log(`🚀 Server running on port ${PORT}`);
   console.log(`📊 Environment: ${NODE_ENV}`);
   console.log(`🏥 Health check: http://localhost:${PORT}/api/health`);
@@ -100,7 +97,7 @@ app.listen(PORT, async () => {
 
   // Start WebSocket service
   try {
-    websocketService.start(app);
+    websocketService.start(server);
     console.log(`✅ WebSocket service started`);
     console.log(`🔗 WebSocket endpoint: ws://localhost:${PORT}`);
   } catch (error) {
@@ -114,7 +111,10 @@ process.on('SIGTERM', async () => {
   paymentMonitorService.stop();
   keepAliveService.stop();
   websocketService.stop();
-  process.exit(0);
+  server.close(() => {
+    console.log('✅ Server closed');
+    process.exit(0);
+  });
 });
 
 process.on('SIGINT', async () => {
@@ -122,7 +122,10 @@ process.on('SIGINT', async () => {
   paymentMonitorService.stop();
   keepAliveService.stop();
   websocketService.stop();
-  process.exit(0);
+  server.close(() => {
+    console.log('✅ Server closed');
+    process.exit(0);
+  });
 });
 
 module.exports = app;
