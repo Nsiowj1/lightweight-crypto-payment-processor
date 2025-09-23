@@ -397,10 +397,10 @@
         <div class="container">
             <a href="#home" class="navbar-brand" onclick="navigateTo('home')">CryptoPay</a>
         <div class="navbar-nav">
-                <a href="#home" class="nav-link">Home</a>
-                <a href="#register" class="nav-link">Register</a>
-                <a href="#dashboard" class="nav-link">Dashboard</a>
-                <a href="#payment" class="nav-link">Make Payment</a>
+                <a href="#" class="nav-link" onclick="event.preventDefault(); navigateTo('home');">Home</a>
+                <a href="#" class="nav-link" onclick="event.preventDefault(); navigateTo('register');">Register</a>
+                <a href="#" class="nav-link" onclick="event.preventDefault(); navigateTo('dashboard');">Dashboard</a>
+                <a href="#" class="nav-link" onclick="event.preventDefault(); navigateTo('payment');">Make Payment</a>
             </div>
         </div>
     </nav>
@@ -606,10 +606,6 @@
 
         window.addEventListener('load', handleHashChange);
         window.addEventListener('hashchange', handleHashChange);
-
-        // Handle initial load immediately
-        const initialHash = window.location.hash.replace('#', '') || 'home';
-        navigateTo(initialHash);
 
         // Merchant registration
         document.getElementById('registerForm').addEventListener('submit', async (e) => {
