@@ -77,15 +77,15 @@ const path = require('path');
 
 // Root endpoint - serve frontend
 app.get('/', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'index.html'));
+  res.sendFile(path.join(__dirname, '..', 'public', 'index.html'));
 });
 
 // SPA catch-all: serve index.html for any non-API route
 app.get('/*', (req, res) => {
-  // Skip if it's an API route
+  // Skip if it's an API route (but this won't trigger for API routes due to routing order)
   if (req.path.startsWith('/api/')) return next();
 
-  res.sendFile(path.join(__dirname, 'public', 'index.html'));
+  res.sendFile(path.join(__dirname, '..', 'public', 'index.html'));
 });
 
 // API info endpoint
