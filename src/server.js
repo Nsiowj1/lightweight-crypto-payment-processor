@@ -73,9 +73,19 @@ console.log('✅ Mounted /api/merchants route');
 app.use('/api/payments', verifyApiKey, paymentRoutes);
 app.use('/api/webhooks', webhookRoutes);
 
+const path = require('path');
+
 // Root endpoint - serve frontend
 app.get('/', (req, res) => {
-  res.sendFile(require('path').join(__dirname, 'public', 'index.html'));
+  res.sendFile(path.join(__dirname, 'public', 'index.html'));
+});
+
+// SPA catch-all: serve index.html for any non-API route
+app.get('/*', (req, res) => {
+  // Skip if it's an API route
+  if (req.path.startsWith('/api/')) return next();
+
+  res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
 // API info endpoint
