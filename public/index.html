@@ -780,10 +780,19 @@
 
         // Check payment status
         async function checkPaymentStatus(paymentId) {
+            // Re-check API key
+            currentApiKey = localStorage.getItem('cryptoPayApiKey') || '';
+
+            if (!currentApiKey) {
+                console.error('API key not found for status check');
+                return;
+            }
+
             try {
                 const response = await fetch(`${API_BASE}/payments/${paymentId}/status`, {
                     headers: {
-                        'Authorization': `Bearer ${currentApiKey}`
+                        'Authorization': `Bearer ${currentApiKey}`,
+                        'Content-Type': 'application/json'
                     }
                 });
 
@@ -843,6 +852,9 @@
             const content = document.getElementById('dashboardContent');
             const header = document.getElementById('dashboardHeader');
 
+            // Re-check API key from localStorage
+            currentApiKey = localStorage.getItem('cryptoPayApiKey') || '';
+
             if (!currentApiKey) {
                 content.innerHTML = `
                     <div class="alert alert-error">
@@ -860,7 +872,8 @@
                 // Fetch recent payments
                 const response = await fetch(`${API_BASE}/payments?limit=10`, {
                     headers: {
-                        'Authorization': `Bearer ${currentApiKey}`
+                        'Authorization': `Bearer ${currentApiKey}`,
+                        'Content-Type': 'application/json'
                     }
                 });
 
@@ -983,10 +996,19 @@
 
         // View payment details
         async function viewPaymentDetails(paymentId) {
+            // Re-check API key
+            currentApiKey = localStorage.getItem('cryptoPayApiKey') || '';
+
+            if (!currentApiKey) {
+                alert('API key not found. Please register again.');
+                return;
+            }
+
             try {
                 const response = await fetch(`${API_BASE}/payments/${paymentId}`, {
                     headers: {
-                        'Authorization': `Bearer ${currentApiKey}`
+                        'Authorization': `Bearer ${currentApiKey}`,
+                        'Content-Type': 'application/json'
                     }
                 });
 
@@ -1005,6 +1027,8 @@ Payment Details:
 ${payment.tx_hash ? `- Transaction: ${payment.tx_hash}` : ''}
 ${payment.paid_at ? `- Paid At: ${new Date(payment.paid_at).toLocaleString()}` : ''}
                     `);
+                } else {
+                    alert('Error loading payment details: ' + result.error);
                 }
             } catch (error) {
                 alert('Error loading payment details: ' + error.message);
