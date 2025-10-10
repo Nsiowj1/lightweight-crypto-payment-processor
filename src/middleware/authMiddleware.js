@@ -4,7 +4,15 @@ const { SUPABASE_SERVICE_ROLE_KEY } = require('../config/environment');
 // Middleware to verify API key authentication
 const verifyApiKey = async (req, res, next) => {
   try {
-    const apiKey = req.headers['x-api-key'];
+    // Check for API key in Authorization header (Bearer token)
+    let apiKey = req.headers.authorization;
+
+    if (apiKey && apiKey.startsWith('Bearer ')) {
+      apiKey = apiKey.substring(7); // Remove 'Bearer ' prefix
+    } else {
+      // Fallback to x-api-key header
+      apiKey = req.headers['x-api-key'];
+    }
 
     if (!apiKey) {
       return res.status(401).json({
