@@ -119,7 +119,8 @@ app.get('/api/', (req, res) => {
     message: 'Lightweight Crypto Payment Processor API',
     version: '1.0.0',
     status: 'running',
-    timestamp: new Date().toISOString()
+    timestamp: new Date().toISOString(),
+    navigation: 'fixed'
   });
 });
 
