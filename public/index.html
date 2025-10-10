@@ -479,9 +479,46 @@
                     <p class="text-muted">Manage your payments and account</p>
                 </div>
 
+                <!-- API Key Management Section -->
+                <div class="card mb-4">
+                    <h3 class="mb-3">🔑 API Key Management</h3>
+                    <div class="grid grid-2" style="align-items: end;">
+                        <div class="form-group">
+                            <label for="apiKeyDisplay" class="form-label">Current API Key (Masked)</label>
+                            <input type="text" id="apiKeyDisplay" class="form-input" value="****4344" readonly style="background: var(--gray-100);">
+                            <small class="text-muted">Your API key is used to access payment data and create new payments</small>
+                        </div>
+                        <div class="form-group">
+                            <label for="manualApiKeyInput" class="form-label">Update API Key</label>
+                            <input type="password" id="manualApiKeyInput" class="form-input" placeholder="Enter your API key if needed..." style="font-family: monospace; font-size: 13px;">
+                        </div>
+                    </div>
+                    <div style="display: flex; gap: 12px;">
+                        <button class="btn btn-secondary" onclick="updateApiKey()" style="font-size: 13px;">Update API Key</button>
+                        <button class="btn btn-secondary" onclick="refreshApiKeyDisplay()" style="font-size: 13px;">Refresh</button>
+                        <a href="#register" class="btn btn-secondary" onclick="navigateTo('register')" style="font-size: 13px;">Create New Account</a>
+                    </div>
+                    <div id="apiKeyMessage" class="mt-3" style="display: none;"></div>
+                </div>
+
                 <div id="dashboardContent">
-                    <div class="alert alert-error">
-                        🔑 Please set your API key in the navigation to access your dashboard.
+                    <!-- API Key Input Section -->
+                    <div id="apiKeySection" class="mb-4" style="display: none;">
+                        <div class="card">
+                            <h3>Set Your API Key</h3>
+                            <p class="text-muted mb-3">Enter the API key you received during merchant registration:</p>
+                            <div class="form-group">
+                                <input type="password" id="manualApiKey" class="form-input" placeholder="Enter your API key..." style="font-family: monospace;">
+                            </div>
+                            <button class="btn" onclick="setApiKey()">Set API Key</button>
+                            <button class="btn btn-secondary" onclick="hideApiKeySection()">Cancel</button>
+                        </div>
+                    </div>
+
+                    <!-- API Key Required Message -->
+                    <div id="apiKeyRequired" class="alert alert-error">
+                        🔑 Please set your API key to access the dashboard.
+                        <button class="btn btn-secondary" onclick="showApiKeySection()" style="margin-left: 16px;">Enter API Key</button>
                     </div>
                 </div>
             </div>
@@ -537,6 +574,14 @@
         // Global variables
         const API_BASE = window.location.origin + '/api';
         let currentApiKey = localStorage.getItem('cryptoPayApiKey') || '';
+
+        // Helper function to get auth headers
+        function getAuthHeaders() {
+            return {
+                'x-api-key': currentApiKey,
+                'Content-Type': 'application/json'
+            };
+        }
 
         // Navigation and routing
         function navigateTo(page) {
@@ -695,10 +740,7 @@
             try {
                 const response = await fetch(`${API_BASE}/payments`, {
                     method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${currentApiKey}`
-                    },
+                    headers: getAuthHeaders(),
                     body: JSON.stringify({
                         amount,
                         currency,
@@ -790,10 +832,7 @@
 
             try {
                 const response = await fetch(`${API_BASE}/payments/${paymentId}/status`, {
-                    headers: {
-                        'Authorization': `Bearer ${currentApiKey}`,
-                        'Content-Type': 'application/json'
-                    }
+                    headers: getAuthHeaders()
                 });
 
                 const result = await response.json();
@@ -854,6 +893,7 @@
 
             // Re-check API key from localStorage
             currentApiKey = localStorage.getItem('cryptoPayApiKey') || '';
+            refreshApiKeyDisplay(); // Update the API key display
 
             if (!currentApiKey) {
                 content.innerHTML = `
@@ -871,10 +911,7 @@
             try {
                 // Fetch recent payments
                 const response = await fetch(`${API_BASE}/payments?limit=10`, {
-                    headers: {
-                        'Authorization': `Bearer ${currentApiKey}`,
-                        'Content-Type': 'application/json'
-                    }
+                    headers: getAuthHeaders()
                 });
 
                 const result = await response.json();
@@ -1006,10 +1043,7 @@
 
             try {
                 const response = await fetch(`${API_BASE}/payments/${paymentId}`, {
-                    headers: {
-                        'Authorization': `Bearer ${currentApiKey}`,
-                        'Content-Type': 'application/json'
-                    }
+                    headers: getAuthHeaders()
                 });
 
                 const result = await response.json();
@@ -1035,6 +1069,82 @@ ${payment.paid_at ? `- Paid At: ${new Date(payment.paid_at).toLocaleString()}` :
             }
         }
 
+        // Set API key manually
+        function setApiKey() {
+            const manualKey = document.getElementById('manualApiKey').value.trim();
+
+            if (!manualKey) {
+                alert('Please enter your API key');
+                return;
+            }
+
+            // Store API key
+            localStorage.setItem('cryptoPayApiKey', manualKey);
+            currentApiKey = manualKey;
+
+            // Hide API key section and reload dashboard
+            hideApiKeySection();
+            loadDashboard();
+        }
+
+        // Show API key input section
+        function showApiKeySection() {
+            document.getElementById('apiKeySection').style.display = 'block';
+            document.getElementById('apiKeyRequired').style.display = 'none';
+        }
+
+        // Hide API key input section
+        function hideApiKeySection() {
+            document.getElementById('apiKeySection').style.display = 'none';
+            document.getElementById('apiKeyRequired').style.display = 'block';
+        }
+
+        // Update API key from the input field
+        function updateApiKey() {
+            const newApiKey = document.getElementById('manualApiKeyInput').value.trim();
+            const messageDiv = document.getElementById('apiKeyMessage');
+
+            if (!newApiKey) {
+                messageDiv.innerHTML = `
+                    <div class="alert alert-error">
+                        ❌ Please enter an API key
+                    </div>
+                `;
+                messageDiv.style.display = 'block';
+                return;
+            }
+
+            // Store API key
+            localStorage.setItem('cryptoPayApiKey', newApiKey);
+            currentApiKey = newApiKey;
+
+            // Update display and clear input
+            refreshApiKeyDisplay();
+            document.getElementById('manualApiKeyInput').value = '';
+
+            messageDiv.innerHTML = `
+                <div class="alert alert-success">
+                    ✅ API key updated successfully!
+                </div>
+            `;
+            messageDiv.style.display = 'block';
+
+            // Reload dashboard content to verify the new key works
+            loadDashboard();
+
+            // Hide message after 3 seconds
+            setTimeout(() => {
+                messageDiv.style.display = 'none';
+            }, 3000);
+        }
+
+        // Refresh the API key display field
+        function refreshApiKeyDisplay() {
+            const displayInput = document.getElementById('apiKeyDisplay');
+            currentApiKey = localStorage.getItem('cryptoPayApiKey') || '';
+            displayInput.value = currentApiKey ? '****' + currentApiKey.slice(-4) : 'No API key set';
+        }
+
         // Initialize
         document.addEventListener('DOMContentLoaded', () => {
             // Auto-generate order ID on payment page
@@ -1042,7 +1152,20 @@ ${payment.paid_at ? `- Paid At: ${new Date(payment.paid_at).toLocaleString()}` :
             if (paymentOrderInput) {
                 paymentOrderInput.value = 'order_' + Date.now();
             }
+
+            // Refresh API key display on page load
+            refreshApiKeyDisplay();
         });
+
+        // Load dashboard content when page loads (for dashboard page)
+        if (window.location.hash === '#dashboard' || window.location.hash === '') {
+            // Small delay to ensure DOM is ready
+            setTimeout(() => {
+                if (document.getElementById('dashboard').classList.contains('active')) {
+                    loadDashboard();
+                }
+            }, 100);
+        }
     </script>
 </body>
 </html>
