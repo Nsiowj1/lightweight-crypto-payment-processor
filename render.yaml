@@ -1,9 +1,8 @@
 services:
   - type: web
     name: crypto-payment-processor
-    runtime: node
-    buildCommand: npm ci
-    startCommand: npm start
+    runtime: docker
+    dockerfilePath: ./Dockerfile
     healthCheckPath: /api/health
     plan: free
     autoDeploy: true
@@ -16,18 +15,17 @@ services:
         value: production
       - key: PORT
         value: 3000
-      # Add your environment variables here
-      # - key: SUPABASE_URL
-      #   fromSecret: supabase-url
-      # - key: SUPABASE_ANON_KEY
-      #   fromSecret: supabase-anon-key
-      # - key: SUPABASE_SERVICE_ROLE_KEY
-      #   fromSecret: supabase-service-role-key
-      # - key: UPSTASH_REDIS_REST_URL
-      #   fromSecret: upstash-redis-url
-      # - key: UPSTASH_REDIS_REST_TOKEN
-      #   fromSecret: upstash-redis-token
-      # - key: JWT_SECRET
-      #   fromSecret: jwt-secret
-      # - key: WEBHOOK_SECRET
-      #   fromSecret: webhook-secret
+      # Frontend URL for production (update with your actual domain)
+      - key: FRONTEND_URL
+        value: https://lightweight-crypto-payment-processor.onrender.com
+      # Note: Add your actual environment variables in Render.com dashboard
+      # SUPABASE_URL=https://your-project.supabase.co
+      # SUPABASE_ANON_KEY=your-anon-key
+      # SUPABASE_SERVICE_ROLE_KEY=your-service-role-key
+      # UPSTASH_REDIS_REST_URL=https://your-redis.upstash.io
+      # UPSTASH_REDIS_REST_TOKEN=your-redis-token
+      # JWT_SECRET=your-jwt-secret
+      # WEBHOOK_SECRET=your-webhook-secret
+      # ANKR_API_KEY=your-ankr-key
+      # BLOCKCYPHER_API_KEY=your-blockcypher-key
+      # BLOCKSTREAM_API_KEY=your-blockstream-key

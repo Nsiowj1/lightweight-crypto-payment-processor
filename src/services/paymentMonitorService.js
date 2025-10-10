@@ -69,6 +69,12 @@ class PaymentMonitorService {
     try {
       console.log('🔍 Checking pending payments...');
 
+      // Test Supabase connection first
+      if (!await this.testSupabaseConnection()) {
+        console.log('⚠️ Supabase unavailable, skipping payment checks');
+        return;
+      }
+
       // Get all pending payments that haven't expired
       const { data: payments, error } = await supabase
         .from('payments')
@@ -303,6 +309,24 @@ class PaymentMonitorService {
     } catch (error) {
       console.error('Error getting monitoring stats:', error);
       return null;
+    }
+  }
+
+  /**
+   * Test Supabase connection
+   */
+  async testSupabaseConnection() {
+    try {
+      // Simple query to test connection
+      const { error } = await supabase
+        .from('payments')
+        .select('id')
+        .limit(1);
+
+      return !error;
+    } catch (error) {
+      console.error('Supabase connection test failed:', error.message);
+      return false;
     }
   }
 

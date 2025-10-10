@@ -36,8 +36,33 @@ const websocketService = require('./services/websocketService');
 
 const app = express();
 
-// Security middleware
-app.use(helmet());
+// Trust proxy for production deployments (important for rate limiting and security)
+app.set('trust proxy', 1);
+
+// Security middleware with HTTPS enforcement in production
+if (process.env.NODE_ENV === 'production') {
+  // Redirect HTTP to HTTPS in production
+  app.use((req, res, next) => {
+    if (req.header('x-forwarded-proto') !== 'https') {
+      res.redirect(`https://${req.header('host')}${req.url}`);
+    } else {
+      next();
+    }
+  });
+}
+
+app.use(helmet({
+  contentSecurityPolicy: {
+    directives: {
+      defaultSrc: ["'self'"],
+      styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"],
+      fontSrc: ["'self'", "https://fonts.gstatic.com"],
+      scriptSrc: ["'self'"],
+      imgSrc: ["'self'", "data:"],
+      connectSrc: ["'self'", "ws:", "wss:"],
+    },
+  },
+}));
 
 // CORS configuration
 app.use(cors({
@@ -81,7 +106,7 @@ app.get('/', (req, res) => {
 });
 
 // SPA catch-all: serve index.html for any non-API route
-app.get('/*', (req, res) => {
+app.get('/*', (req, res, next) => {
   // Skip if it's an API route (but this won't trigger for API routes due to routing order)
   if (req.path.startsWith('/api/')) return next();
 

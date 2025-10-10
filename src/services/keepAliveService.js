@@ -232,24 +232,32 @@ class KeepAliveService {
    */
   async logKeepAliveResult(results) {
     try {
-      const { createClient } = require('@supabase/supabase-js');
-      const { SUPABASE_SERVICE_ROLE_KEY } = require('../config/environment');
+      // Test connections first
+      const supabaseAvailable = await this.testSupabaseConnection();
+      const redisAvailable = await this.testRedisConnection();
 
-      const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
+      if (supabaseAvailable) {
+        const { createClient } = require('@supabase/supabase-js');
+        const { SUPABASE_SERVICE_ROLE_KEY } = require('../config/environment');
 
-      await supabase
-        .from('health_check')
-        .insert({
-          service_name: 'keep-alive',
-          status: results.overall.status === 'success' ? 'healthy' : 'unhealthy',
-          response_time_ms: parseInt(results.overall.responseTime),
-          error_message: results.overall.status !== 'success' ?
-            `Keep-alive check failed: ${results.overall.successCount}/${results.overall.totalCount} services healthy` : null
-        });
+        const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
 
-      // Cache results in Redis for quick access
-      const cacheKey = `keepalive:${results.source}:${results.timestamp.split('T')[0]}`;
-      await redis.setex(cacheKey, 86400, JSON.stringify(results)); // Cache for 24 hours
+        await supabase
+          .from('health_check')
+          .insert({
+            service_name: 'keep-alive',
+            status: results.overall.status === 'success' ? 'healthy' : 'unhealthy',
+            response_time_ms: parseInt(results.overall.responseTime),
+            error_message: results.overall.status !== 'success' ?
+              `Keep-alive check failed: ${results.overall.successCount}/${results.overall.totalCount} services healthy` : null
+          });
+      }
+
+      // Cache results in Redis for quick access (if available)
+      if (redisAvailable) {
+        const cacheKey = `keepalive:${results.source}:${results.timestamp.split('T')[0]}`;
+        await redis.setex(cacheKey, 86400, JSON.stringify(results)); // Cache for 24 hours
+      }
 
     } catch (error) {
       console.error('Error logging keep-alive result:', error);
@@ -263,24 +271,29 @@ class KeepAliveService {
     try {
       console.warn('⚠️ Keep-alive failure detected, attempting recovery...');
 
+      // Test Supabase connection before attempting database operations
+      const supabaseAvailable = await this.testSupabaseConnection();
+
       // Try to restart payment monitor if it's not responding
       if (results.services['payment-monitor'] &&
           results.services['payment-monitor'].status !== 'success') {
         console.log('🔄 Attempting to restart payment monitor...');
 
-        const { createClient } = require('@supabase/supabase-js');
-        const { SUPABASE_SERVICE_ROLE_KEY } = require('../config/environment');
+        if (supabaseAvailable) {
+          const { createClient } = require('@supabase/supabase-js');
+          const { SUPABASE_SERVICE_ROLE_KEY } = require('../config/environment');
 
-        const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
+          const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
 
-        // Log the failure
-        await supabase
-          .from('health_check')
-          .insert({
-            service_name: 'payment-monitor-restart',
-            status: 'warning',
-            error_message: 'Payment monitor not responding, attempted restart'
-          });
+          // Log the failure
+          await supabase
+            .from('health_check')
+            .insert({
+              service_name: 'payment-monitor-restart',
+              status: 'warning',
+              error_message: 'Payment monitor not responding, attempted restart'
+            });
+        }
       }
 
       // Send alert (in production, this would be email/Slack notification)
@@ -302,6 +315,19 @@ class KeepAliveService {
    */
   async getStats() {
     try {
+      // Test Supabase connection first
+      if (!await this.testSupabaseConnection()) {
+        console.log('⚠️ Supabase unavailable, returning basic stats');
+        return {
+          total: 0,
+          healthy: 0,
+          unhealthy: 0,
+          recent: [],
+          uptime: 'N/A',
+          note: 'External services unavailable'
+        };
+      }
+
       const { createClient } = require('@supabase/supabase-js');
       const { SUPABASE_SERVICE_ROLE_KEY } = require('../config/environment');
 
@@ -348,6 +374,43 @@ class KeepAliveService {
       services: this.services.length,
       timestamp: new Date().toISOString()
     };
+  }
+
+  /**
+   * Test Supabase connection
+   */
+  async testSupabaseConnection() {
+    try {
+      const { createClient } = require('@supabase/supabase-js');
+      const { SUPABASE_SERVICE_ROLE_KEY } = require('../config/environment');
+
+      const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
+
+      // Simple query to test connection
+      const { error } = await supabase
+        .from('health_check')
+        .select('id')
+        .limit(1);
+
+      return !error;
+    } catch (error) {
+      console.error('Supabase connection test failed:', error.message);
+      return false;
+    }
+  }
+
+  /**
+   * Test Redis connection
+   */
+  async testRedisConnection() {
+    try {
+      // Simple ping to test connection
+      await redis.ping();
+      return true;
+    } catch (error) {
+      console.error('Redis connection test failed:', error.message);
+      return false;
+    }
   }
 
   /**

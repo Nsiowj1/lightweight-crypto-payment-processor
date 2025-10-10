@@ -8,7 +8,7 @@ CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 CREATE TABLE IF NOT EXISTS merchants (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   email VARCHAR(255) UNIQUE NOT NULL,
-  api_key VARCHAR(255) UNIQUE NOT NULL,
+  api_key TEXT UNIQUE NOT NULL,
   name VARCHAR(255),
   description TEXT,
   webhook_url VARCHAR(500),
