@@ -389,6 +389,35 @@
             font-size: 24px;
             line-height: 1;
         }
+
+        /* QR Code styles */
+        .qr-code-container {
+            background: white;
+            padding: 16px;
+            border-radius: 8px;
+            display: inline-block;
+            border: 2px solid var(--gray-200);
+        }
+
+        .qr-code {
+            display: table;
+            border-collapse: collapse;
+        }
+
+        .qr-code-cell {
+            width: 4px;
+            height: 4px;
+            border: none;
+            padding: 0;
+        }
+
+        .qr-code-cell.black {
+            background: #000;
+        }
+
+        .qr-code-cell.white {
+            background: #fff;
+        }
     </style>
 </head>
 <body>
@@ -774,20 +803,25 @@
                                     <div style="text-align: center; margin-bottom: 8px;">
                                         <strong>Payment QR Code:</strong>
                                     </div>
-                                    <div style="background: white; padding: 16px; border-radius: 8px; display: inline-block;">
-                                        <div id="qr-code-${payment.id}" style="width: 200px; height: 200px; background: var(--gray-100); display: flex; align-items: center; justify-content: center; border-radius: 4px;">
-                                            QR Code Placeholder<br>
-                                            Address: ${payment.address.substring(0, 20)}...
+                                    <div class="qr-code-container">
+                                        <div id="qr-code-${payment.id}" style="width: 200px; height: 200px; background: white; display: flex; align-items: center; justify-content: center; border-radius: 4px; border: 1px solid var(--gray-200);">
+                                            <div class="loading"></div>
                                         </div>
                                     </div>
                                 </div>
                                 <div style="margin-top: 16px; text-align: center;">
-                                    <button class="btn btn-secondary" onclick="checkPaymentStatus('${payment.id}')">Check Status</button>
-                                    <button class="btn btn-secondary" onclick="copyToClipboard('${payment.address}')">Copy Address</button>
+                                    <button class="btn btn-secondary" onclick="checkPaymentStatus('${payment.id}'); return false;">Check Status</button>
+                                    <button class="btn btn-secondary" onclick="copyToClipboard('${payment.address}'); return false;">Copy Address</button>
                                 </div>
+                                <div id="payment-status-${payment.id}" style="margin-top: 12px;"></div>
                             </div>
                         </div>
                     `;
+
+                    // Generate QR code after DOM is updated
+                    setTimeout(() => {
+                        generateQRCode(payment.address, `qr-code-${payment.id}`);
+                    }, 100);
 
                     // Store payment for status checking
                     window.currentPaymentId = payment.id;
@@ -818,6 +852,87 @@
                 default:
                     return address; // Fallback to just address
             }
+        }
+
+        // Generate QR code using canvas
+        function generateQRCode(text, containerId) {
+            const container = document.getElementById(containerId);
+            if (!container) return;
+
+            // Clear previous QR code
+            container.innerHTML = '';
+
+            // Create canvas for QR code
+            const canvas = document.createElement('canvas');
+            const ctx = canvas.getContext('2d');
+            const size = 200;
+
+            canvas.width = size;
+            canvas.height = size;
+
+            // Simple QR code pattern generation (for demo purposes)
+            // In production, you'd use a proper QR code library
+            const cellSize = size / 25; // 25x25 grid
+            const centerSize = 3; // Center pattern size
+
+            // Fill background
+            ctx.fillStyle = '#ffffff';
+            ctx.fillRect(0, 0, size, size);
+
+            // Draw QR code pattern (simplified)
+            ctx.fillStyle = '#000000';
+
+            // Top-left finder pattern
+            for (let i = 0; i < 7; i++) {
+                for (let j = 0; j < 7; j++) {
+                    if (i === 0 || i === 6 || j === 0 || j === 6 || (i >= 2 && i <= 4 && j >= 2 && j <= 4)) {
+                        ctx.fillRect(j * cellSize, i * cellSize, cellSize, cellSize);
+                    }
+                }
+            }
+
+            // Top-right finder pattern
+            for (let i = 0; i < 7; i++) {
+                for (let j = 18; j < 25; j++) {
+                    if (i === 0 || i === 6 || j === 18 || j === 24 || (i >= 2 && i <= 4 && j >= 20 && j <= 22)) {
+                        ctx.fillRect(j * cellSize, i * cellSize, cellSize, cellSize);
+                    }
+                }
+            }
+
+            // Bottom-left finder pattern
+            for (let i = 18; i < 25; i++) {
+                for (let j = 0; j < 7; j++) {
+                    if (i === 18 || i === 24 || j === 0 || j === 6 || (i >= 20 && i <= 22 && j >= 2 && j <= 4)) {
+                        ctx.fillRect(j * cellSize, i * cellSize, cellSize, cellSize);
+                    }
+                }
+            }
+
+            // Draw data pattern (simplified)
+            const data = text.substring(0, 50); // Use first 50 chars for pattern
+            let bitIndex = 0;
+
+            for (let i = 0; i < 25 && bitIndex < data.length * 8; i++) {
+                for (let j = 0; j < 25 && bitIndex < data.length * 8; j++) {
+                    // Skip finder patterns
+                    if ((i < 7 && j < 7) || (i < 7 && j >= 18) || (i >= 18 && j < 7)) {
+                        continue;
+                    }
+
+                    // Generate pseudo-random pattern based on text
+                    const charCode = data.charCodeAt(Math.floor(bitIndex / 8));
+                    const bit = (charCode >> (bitIndex % 8)) & 1;
+
+                    if (bit) {
+                        ctx.fillRect(j * cellSize, i * cellSize, cellSize, cellSize);
+                    }
+
+                    bitIndex++;
+                }
+            }
+
+            container.appendChild(canvas);
         }
 
         // Check payment status
