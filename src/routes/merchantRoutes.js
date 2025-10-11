@@ -55,7 +55,7 @@ router.post('/', async (req, res) => {
       { expiresIn: '100y' } // Essentially unlimited for API key
     );
 
-    // Create merchant record
+    // Create merchant record (without wallet fields for now)
     const { data, error: insertError } = await supabase
       .from('merchants')
       .insert({

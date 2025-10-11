@@ -46,7 +46,7 @@ router.post('/', async (req, res) => {
     // Verify merchant exists in database first
     const { data: merchantData, error: merchantError } = await supabase
       .from('merchants')
-      .select('id, email, wallet_addresses')
+      .select('id, email')
       .eq('id', req.merchant.id)
       .single();
 
@@ -64,14 +64,9 @@ router.post('/', async (req, res) => {
     // Calculate expiration time
     const expiresAt = new Date(Date.now() + expires_in * 1000);
 
-    // Check if merchant has a wallet address for this currency
-    const merchantWalletAddress = walletConnectionService.getWalletAddress(
-      merchantData.wallet_addresses || {},
-      currency
-    );
-
-    // Use merchant's wallet address if available, otherwise generate new one
-    const address = merchantWalletAddress || await generateAddress(currency);
+    // For now, use generated addresses until wallet integration is fully deployed
+    // TODO: Add wallet address support once database schema is updated
+    const address = await generateAddress(currency);
 
     // Create payment record in database
     const { data, error: dbError } = await supabase

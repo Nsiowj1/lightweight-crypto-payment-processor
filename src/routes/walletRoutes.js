@@ -106,35 +106,17 @@ router.post('/:merchantId/connect', verifyApiKey, async (req, res) => {
       });
     }
 
-    // Update merchant record with wallet information
-    const { data, error: updateError } = await supabase
-      .from('merchants')
-      .update({
-        wallet_connected: true,
-        wallet_addresses: validatedAddresses,
-        wallet_connection_date: new Date().toISOString(),
-        updated_at: new Date().toISOString()
-      })
-      .eq('id', merchantId)
-      .select('id, email, wallet_connected, wallet_addresses, wallet_connection_date')
-      .single();
-
-    if (updateError) {
-      console.error('Wallet connection update error:', updateError);
-      return res.status(500).json({
-        success: false,
-        error: 'Failed to save wallet connection'
-      });
-    }
+    // For now, skip wallet connection until database is updated
+    // TODO: Enable wallet connection once database schema is updated
+    console.warn('Wallet connection attempted but wallet_addresses column not available yet');
 
     res.json({
       success: true,
       data: {
-        merchant: data,
         connectedCurrencies: Object.keys(validatedAddresses),
-        invalidAddresses: invalidAddresses.length > 0 ? invalidAddresses : undefined
-      },
-      message: 'Wallet connected successfully'
+        invalidAddresses: invalidAddresses.length > 0 ? invalidAddresses : undefined,
+        message: 'Wallet validation successful. Database update pending.'
+      }
     });
 
   } catch (error) {
@@ -161,7 +143,7 @@ router.get('/:merchantId/wallet', verifyApiKey, async (req, res) => {
 
     const { data, error } = await supabase
       .from('merchants')
-      .select('id, email, wallet_connected, wallet_addresses, wallet_connection_date')
+      .select('id, email')
       .eq('id', merchantId)
       .single();
 
