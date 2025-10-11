@@ -13,6 +13,11 @@ CREATE TABLE IF NOT EXISTS merchants (
   description TEXT,
   webhook_url VARCHAR(500),
   is_active BOOLEAN DEFAULT true,
+  -- Trust Wallet integration fields
+  wallet_connected BOOLEAN DEFAULT false,
+  wallet_addresses JSONB DEFAULT '{}',
+  wallet_connection_date TIMESTAMPTZ,
+  wallet_verification_message TEXT,
   created_at TIMESTAMPTZ DEFAULT NOW(),
   updated_at TIMESTAMPTZ DEFAULT NOW()
 );

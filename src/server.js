@@ -29,6 +29,16 @@ try {
   merchantRoutes = express.Router(); // fallback empty router
 }
 
+// Try to load wallet routes with error handling
+let walletRoutes;
+try {
+  walletRoutes = require('./routes/walletRoutes');
+  console.log('✅ Wallet routes loaded successfully');
+} catch (error) {
+  console.error('❌ Failed to load wallet routes:', error);
+  walletRoutes = express.Router(); // fallback empty router
+}
+
 // Import services
 const paymentMonitorService = require('./services/paymentMonitorService');
 const keepAliveService = require('./services/keepAliveService');
@@ -97,6 +107,10 @@ console.log('✅ Mounted /api/merchants route');
 // API routes with authentication
 app.use('/api/payments', verifyApiKey, paymentRoutes);
 app.use('/api/webhooks', webhookRoutes);
+
+// Wallet management routes (authenticated)
+app.use('/api/wallet', walletRoutes);
+console.log('✅ Mounted /api/wallet route');
 
 const path = require('path');
 

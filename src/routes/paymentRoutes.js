@@ -4,6 +4,7 @@ const { createClient } = require('@supabase/supabase-js');
 const { v4: uuidv4 } = require('uuid');
 const { SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY } = require('../config/environment');
 const walletService = require('../services/walletService');
+const walletConnectionService = require('../services/walletConnectionService');
 const blockchainService = require('../services/blockchainService');
 
 const router = express.Router();
@@ -42,19 +43,10 @@ router.post('/', async (req, res) => {
 
     const { amount, currency, order_id, description, expires_in, callback_url, metadata } = value;
 
-    // Generate unique payment ID
-    const paymentId = uuidv4();
-
-    // Calculate expiration time
-    const expiresAt = new Date(Date.now() + expires_in * 1000);
-
-    // Generate crypto address using HD wallet
-    const address = await generateAddress(currency);
-
-    // Verify merchant exists in database
+    // Verify merchant exists in database first
     const { data: merchantData, error: merchantError } = await supabase
       .from('merchants')
-      .select('id, email')
+      .select('id, email, wallet_addresses')
       .eq('id', req.merchant.id)
       .single();
 
@@ -65,6 +57,21 @@ router.post('/', async (req, res) => {
         error: 'Merchant not found. Please register first.'
       });
     }
+
+    // Generate unique payment ID
+    const paymentId = uuidv4();
+
+    // Calculate expiration time
+    const expiresAt = new Date(Date.now() + expires_in * 1000);
+
+    // Check if merchant has a wallet address for this currency
+    const merchantWalletAddress = walletConnectionService.getWalletAddress(
+      merchantData.wallet_addresses || {},
+      currency
+    );
+
+    // Use merchant's wallet address if available, otherwise generate new one
+    const address = merchantWalletAddress || await generateAddress(currency);
 
     // Create payment record in database
     const { data, error: dbError } = await supabase
