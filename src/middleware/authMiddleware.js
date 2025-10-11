@@ -1,31 +1,4 @@
-    { name: 'main-api', error: 'Request failed with status code 503' }
-  ]
-}
-🔍 Checking pending payments...
-📭 No pending payments to check
-Address generation error: TypeError: Cannot read properties of undefined (reading 'validateMnemonic')
-    at WalletService.generateMasterKey (/app/src/services/walletService.js:68:16)
-    at generateAddress (/app/src/routes/paymentRoutes.js:254:37)
-    at /app/src/routes/paymentRoutes.js:52:27
-    at Layer.handle [as handle_request] (/app/node_modules/express/lib/router/layer.js:95:5)
-    at next (/app/node_modules/express/lib/router/route.js:149:13)
-    at Route.dispatch (/app/node_modules/express/lib/router/route.js:119:3)
-    at Layer.handle [as handle_request] (/app/node_modules/express/lib/router/layer.js:95:5)
-    at /app/node_modules/express/lib/router/index.js:284:15
-    at Function.process_params (/app/node_modules/express/lib/router/index.js:346:12)
-    at next (/app/node_modules/express/lib/router/index.js:280:10)
-Payment creation error: Error: Failed to generate USDT address: Cannot read properties of undefined (reading 'validateMnemonic')
-    at generateAddress (/app/src/routes/paymentRoutes.js:261:11)
-    at /app/src/routes/paymentRoutes.js:52:27
-    at Layer.handle [as handle_request] (/app/node_modules/express/lib/router/layer.js:95:5)
-    at next (/app/node_modules/express/lib/router/route.js:149:13)
-    at Route.dispatch (/app/node_modules/express/lib/router/route.js:119:3)
-    at Layer.handle [as handle_request] (/app/node_modules/express/lib/router/layer.js:95:5)
-    at /app/node_modules/express/lib/router/index.js:284:15
-    at Function.process_params (/app/node_modules/express/lib/router/index.js:346:12)
-    at next (/app/node_modules/express/lib/router/index.js:280:10)
-    at Function.handle (/app/node_modules/express/lib/router/index.js:175:3)
-Need better ways to work with logs? Try theRender CLI, Render MCP Server, or set up a log stream integration const jwt = require('jsonwebtoken');
+const jwt = require('jsonwebtoken');
 const { SUPABASE_SERVICE_ROLE_KEY } = require('../config/environment');
 
 // Middleware to verify API key authentication
