@@ -81,7 +81,7 @@ class WalletService {
     return {
       mnemonic,
       masterKey: masterKey.toJSON(),
-      fingerprint: masterKey.fingerprint.toString('hex')
+      fingerprint: masterKey.fingerprint ? masterKey.fingerprint.toString(16) : '0'
     };
   }
 

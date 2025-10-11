@@ -51,6 +51,21 @@ router.post('/', async (req, res) => {
     // Generate crypto address using HD wallet
     const address = await generateAddress(currency);
 
+    // Verify merchant exists in database
+    const { data: merchantData, error: merchantError } = await supabase
+      .from('merchants')
+      .select('id, email')
+      .eq('id', req.merchant.id)
+      .single();
+
+    if (merchantError || !merchantData) {
+      console.error('Merchant verification failed:', merchantError);
+      return res.status(401).json({
+        success: false,
+        error: 'Merchant not found. Please register first.'
+      });
+    }
+
     // Create payment record in database
     const { data, error: dbError } = await supabase
       .from('payments')
