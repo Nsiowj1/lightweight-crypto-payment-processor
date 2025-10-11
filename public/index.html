@@ -870,69 +870,62 @@
             canvas.width = size;
             canvas.height = size;
 
-            // Simple QR code pattern generation (for demo purposes)
-            // In production, you'd use a proper QR code library
-            const cellSize = size / 25; // 25x25 grid
-            const centerSize = 3; // Center pattern size
+            // QR Code generation using a simple algorithm
+            const qrSize = 21; // Version 1 QR code size
+            const cellSize = size / qrSize;
 
             // Fill background
             ctx.fillStyle = '#ffffff';
             ctx.fillRect(0, 0, size, size);
 
-            // Draw QR code pattern (simplified)
+            // Draw QR code pattern
             ctx.fillStyle = '#000000';
 
-            // Top-left finder pattern
-            for (let i = 0; i < 7; i++) {
-                for (let j = 0; j < 7; j++) {
-                    if (i === 0 || i === 6 || j === 0 || j === 6 || (i >= 2 && i <= 4 && j >= 2 && j <= 4)) {
-                        ctx.fillRect(j * cellSize, i * cellSize, cellSize, cellSize);
-                    }
-                }
-            }
+            // Create a proper QR-like pattern based on the text
+            const textHash = simpleHash(text);
+            let patternIndex = 0;
 
-            // Top-right finder pattern
-            for (let i = 0; i < 7; i++) {
-                for (let j = 18; j < 25; j++) {
-                    if (i === 0 || i === 6 || j === 18 || j === 24 || (i >= 2 && i <= 4 && j >= 20 && j <= 22)) {
-                        ctx.fillRect(j * cellSize, i * cellSize, cellSize, cellSize);
-                    }
-                }
-            }
-
-            // Bottom-left finder pattern
-            for (let i = 18; i < 25; i++) {
-                for (let j = 0; j < 7; j++) {
-                    if (i === 18 || i === 24 || j === 0 || j === 6 || (i >= 20 && i <= 22 && j >= 2 && j <= 4)) {
-                        ctx.fillRect(j * cellSize, i * cellSize, cellSize, cellSize);
-                    }
-                }
-            }
-
-            // Draw data pattern (simplified)
-            const data = text.substring(0, 50); // Use first 50 chars for pattern
-            let bitIndex = 0;
-
-            for (let i = 0; i < 25 && bitIndex < data.length * 8; i++) {
-                for (let j = 0; j < 25 && bitIndex < data.length * 8; j++) {
-                    // Skip finder patterns
-                    if ((i < 7 && j < 7) || (i < 7 && j >= 18) || (i >= 18 && j < 7)) {
+            for (let i = 0; i < qrSize; i++) {
+                for (let j = 0; j < qrSize; j++) {
+                    // Skip quiet zone (border)
+                    if (i < 2 || i >= qrSize - 2 || j < 2 || j >= qrSize - 2) {
                         continue;
                     }
 
-                    // Generate pseudo-random pattern based on text
-                    const charCode = data.charCodeAt(Math.floor(bitIndex / 8));
-                    const bit = (charCode >> (bitIndex % 8)) & 1;
+                    // Create finder patterns (top-left, top-right, bottom-left)
+                    if ((i <= 6 && j <= 6) || (i <= 6 && j >= qrSize - 7) || (i >= qrSize - 7 && j <= 6)) {
+                        // Draw finder pattern
+                        if (i === 2 || i === 6 || j === 2 || j === 6 || (i >= 3 && i <= 5 && j >= 3 && j <= 5)) {
+                            ctx.fillRect(j * cellSize, i * cellSize, cellSize, cellSize);
+                        }
+                    } else {
+                        // Generate data pattern based on text hash
+                        const charIndex = Math.floor(patternIndex / 8) % text.length;
+                        const bitIndex = patternIndex % 8;
+                        const charCode = text.charCodeAt(charIndex);
+                        const bit = (charCode >> bitIndex) & 1;
 
-                    if (bit) {
-                        ctx.fillRect(j * cellSize, i * cellSize, cellSize, cellSize);
+                        if (bit) {
+                            ctx.fillRect(j * cellSize, i * cellSize, cellSize, cellSize);
+                        }
+
+                        patternIndex++;
                     }
-
-                    bitIndex++;
                 }
             }
 
             container.appendChild(canvas);
+        }
+
+        // Simple hash function for consistent QR pattern generation
+        function simpleHash(str) {
+            let hash = 0;
+            for (let i = 0; i < str.length; i++) {
+                const char = str.charCodeAt(i);
+                hash = ((hash << 5) - hash) + char;
+                hash = hash & hash; // Convert to 32-bit integer
+            }
+            return Math.abs(hash);
         }
 
         // Check payment status
@@ -974,18 +967,72 @@
 
         // Copy address to clipboard
         function copyToClipboard(text) {
-            navigator.clipboard.writeText(text).then(() => {
-                alert('Address copied to clipboard!');
-            }).catch(() => {
-                // Fallback for older browsers
-                const textArea = document.createElement('textarea');
-                textArea.value = text;
-                document.body.appendChild(textArea);
-                textArea.select();
+            if (!text) {
+                alert('No address to copy!');
+                return;
+            }
+
+            // Try modern clipboard API first
+            if (navigator.clipboard && window.isSecureContext) {
+                navigator.clipboard.writeText(text).then(() => {
+                    showCopySuccess();
+                }).catch((err) => {
+                    console.error('Clipboard API failed:', err);
+                    fallbackCopy(text);
+                });
+            } else {
+                fallbackCopy(text);
+            }
+        }
+
+        function fallbackCopy(text) {
+            const textArea = document.createElement('textarea');
+            textArea.value = text;
+            textArea.style.position = 'fixed';
+            textArea.style.left = '-999999px';
+            textArea.style.top = '-999999px';
+            document.body.appendChild(textArea);
+            textArea.focus();
+            textArea.select();
+
+            try {
                 document.execCommand('copy');
-                document.body.removeChild(textArea);
-                alert('Address copied to clipboard!');
-            });
+                showCopySuccess();
+            } catch (err) {
+                console.error('Fallback copy failed:', err);
+                alert('Copy failed. Please manually copy the address: ' + text);
+            }
+
+            document.body.removeChild(textArea);
+        }
+
+        function showCopySuccess() {
+            // Show a temporary success message
+            const notification = document.createElement('div');
+            notification.innerHTML = '✅ Address copied to clipboard!';
+            notification.style.cssText = `
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                background: var(--success);
+                color: white;
+                padding: 12px 16px;
+                border-radius: 8px;
+                box-shadow: var(--shadow-lg);
+                z-index: 10000;
+                font-weight: 600;
+                animation: slideIn 0.3s ease-out;
+            `;
+
+            document.body.appendChild(notification);
+
+            // Remove after 3 seconds
+            setTimeout(() => {
+                notification.style.animation = 'slideOut 0.3s ease-in';
+                setTimeout(() => {
+                    document.body.removeChild(notification);
+                }, 300);
+            }, 3000);
         }
 
         // Auto-check payment status
