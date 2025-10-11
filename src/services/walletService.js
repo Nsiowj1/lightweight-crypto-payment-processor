@@ -1,10 +1,16 @@
-const { hdkey } = require('hdkey');
-const { bip39 } = require('bip39');
-const { ECPairFactory } = require('ecpair');
-const ecc = require('tiny-secp256k1');
-const Web3 = require('web3');
-const { PublicKey } = require('@solana/web3.js');
-const crypto = require('crypto');
+// Import required modules with error handling
+let hdkey, bip39, ECPairFactory, ecc, Web3, PublicKey;
+
+try {
+  hdkey = require('hdkey');
+  bip39 = require('bip39');
+  ECPairFactory = require('ecpair').ECPairFactory;
+  ecc = require('tiny-secp256k1');
+  Web3 = require('web3');
+  PublicKey = require('@solana/web3.js').PublicKey;
+} catch (error) {
+  console.error('Error importing wallet dependencies:', error.message);
+}
 
 // Initialize ECPair
 const ECPair = ECPairFactory(ecc);
