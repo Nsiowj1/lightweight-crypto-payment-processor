@@ -43,11 +43,14 @@ router.post('/', async (req, res) => {
       });
     }
 
-    // Generate unique API key (JWT-based)
+    // Generate merchant ID first
+    const merchantId = uuidv4();
+
+    // Generate unique API key (JWT-based) using the actual merchant ID
     const jwt = require('jsonwebtoken');
     const apiKey = jwt.sign(
       {
-        merchantId: uuidv4(),
+        merchantId: merchantId,
         email,
         type: 'merchant'
       },
@@ -55,11 +58,11 @@ router.post('/', async (req, res) => {
       { expiresIn: '100y' } // Essentially unlimited for API key
     );
 
-    // Create merchant record (without wallet fields for now)
+    // Create merchant record with the matching ID
     const { data, error: insertError } = await supabase
       .from('merchants')
       .insert({
-        id: uuidv4(),
+        id: merchantId,
         email,
         name,
         description,
